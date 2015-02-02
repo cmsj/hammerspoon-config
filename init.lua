@@ -253,7 +253,7 @@ hs.hotkey.bind(hyper, 's', function() hs.window.focusedWindow():moveToUnit(hs.la
 hs.hotkey.bind(hyper, '[', function() hs.window.focusedWindow():moveToUnit(hs.layout.left50) end)
 hs.hotkey.bind(hyper, ']', function() hs.window.focusedWindow():moveToUnit(hs.layout.right50) end)
 hs.hotkey.bind(hyper, 'f', function() hs.window.focusedWindow():maximize() end)
-hs.hotkey.bind(hyper, 'r', function() hs.window.focusedWindow():toggleFullscreen() end)
+hs.hotkey.bind(hyper, 'r', function() hs.window.focusedWindow():toggleFullScreen() end)
 
 -- Hotkeys to trigger defined layouts
 hs.hotkey.bind(hyper, '1', function() hs.layout.apply(internal_display) end)
