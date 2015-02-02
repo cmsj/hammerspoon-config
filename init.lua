@@ -107,6 +107,28 @@ function toggle_audio_output()
     hs.notify.show("Hammerspoon", "Default output device:", hs.audiodevice.defaultOutputDevice():name(), "")
 end
 
+-- Toggle Skype between muted/unmuted, whether it is focused or not
+function toggleSkypeMute()
+    local skype = hs.appfinder.appFromName("Skype")
+    if not skype then
+        return
+    end
+
+    local lastapp = nil
+    if not skype:isFrontmost() then
+        lastapp = hs.application.frontmostApplication()
+        skype:activate()
+    end
+
+    if not skype:selectMenuItem({"Conversations", "Mute Microphone"}) then
+        skype:selectMenuItem({"Conversations", "Unmute Microphone"})
+    end
+
+    if lastapp then
+        lastapp:activate()
+    end
+end
+
 -- Toggle an application between being the frontmost app, and being hidden
 function toggle_application(_app)
     local app = hs.appfinder.appFromName(_app)
@@ -262,6 +284,7 @@ hs.hotkey.bind(hyper, 'y', hs.toggleConsole)
 hs.hotkey.bind(hyper, 'n', function() os.execute("open ~") end)
 hs.hotkey.bind(hyper, 'c', caffeineClicked)
 hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
+hs.hotkey.bind(hyper, 'm', toggleSkypeMute)
 -- Can't use this until we fix https://github.com/Hammerspoon/hammerspoon/issues/203
 --hs.hotkey.bind({}, 'F17', function() hs.eventtap.keyStrokes({}, hs.pasteboard.getContents()) end)
 
