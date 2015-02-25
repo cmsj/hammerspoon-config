@@ -6,6 +6,7 @@ local configFileWatcher = nil
 local appWatcher = nil
 local wifiWatcher = nil
 local screenWatcher = nil
+local statusletTimer = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
@@ -30,6 +31,52 @@ local lastSSID = hs.wifi.currentNetwork()
 
 -- Defines for screen watcher
 local lastNumberOfScreens = #hs.screen.allScreens()
+
+-- Defines for statuslets
+local initialScreenFrame = hs.screen.allScreens()[1]:fullFrame()
+
+local statusDotWidth = 10
+local statusTextWidth = 30
+local statusTextHeight = 15
+local firewallStatusText = hs.drawing.text(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth + 5,
+                                                            initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*3) + 2,
+                                                            statusTextWidth,
+                                                            statusTextHeight), "FW:")
+local cccStatusText = hs.drawing.text(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth,
+                                                       initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*2) + 1,
+                                                       statusTextWidth,
+                                                       statusTextHeight), "CCC:")
+local arqStatusText = hs.drawing.text(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth + 4,
+                                                       initialScreenFrame.y + initialScreenFrame.h - statusTextHeight,
+                                                       statusTextWidth,
+                                                       statusTextHeight), "Arq:")
+firewallStatusText:setTextSize(11)
+cccStatusText:setTextSize(11)
+arqStatusText:setTextSize(11)
+firewallStatusText:show()
+cccStatusText:show()
+arqStatusText:show()
+local firewallStatusDot = hs.drawing.circle(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth,
+                                                             initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*3) + 4,
+                                                             statusDotWidth,
+                                                             statusDotWidth))
+local cccStatusDot = hs.drawing.circle(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth,
+                                                        initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*2) + 3,
+                                                        statusDotWidth,
+                                                        statusDotWidth))
+local arqStatusDot = hs.drawing.circle(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth,
+                                                        initialScreenFrame.y + initialScreenFrame.h - statusTextHeight + 2,
+                                                        statusDotWidth,
+                                                        statusDotWidth))
+firewallStatusDot:setFillColor(hs.drawing.color.osx_yellow)
+firewallStatusDot:setStroke(false)
+firewallStatusDot:show()
+cccStatusDot:setFillColor(hs.drawing.color.osx_yellow)
+cccStatusDot:setStroke(false)
+cccStatusDot:show()
+arqStatusDot:setFillColor(hs.drawing.color.osx_yellow)
+arqStatusDot:setStroke(false)
+arqStatusDot:show()
 
 -- Define window layouts
 --   Format reminder:
@@ -188,8 +235,11 @@ end
 
 -- Perform tasks to configure the system for my home WiFi network
 function home_arrived()
+    print("volume...")
     hs.audiodevice.defaultOutputDevice():setVolume(25)
+    print("firewall...")
     os.execute("sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall off")
+    print("finder...")
     hs.applescript.applescript([[
         tell application "Finder"
             try
@@ -197,12 +247,8 @@ function home_arrived()
             end try
         end tell
     ]])
-    hs.applescript.applescript([[
-        tell application "GeekTool Helper"
-            refresh all
-        end tell
-    ]])
-
+    updateStatuslets()
+    print("done.")
     hs.notify.show("Hammerspoon", "", "Unmuted volume, mounted volumes, disabled firewall", "")
 end
 
@@ -215,13 +261,33 @@ function home_departed()
             eject "Data"
         end tell
     ]])
-    hs.applescript.applescript([[
-        tell application "GeekTool Helper"
-            refresh all
-        end tell
-    ]])
+    updateStatuslets()
 
     hs.notify.show("Hammerspoon", "", "Muted volume, unmounted volumes, enabled firewall", "")
+end
+
+function updateStatuslets()
+    _,_,fwcode = os.execute('sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getblockall | grep "block all non-essential"')
+    _,_,ccccode = os.execute('~/bin/check_today_ccc.sh')
+    _,_,arqcode = os.execute('grep -q "Arq.*finished backup" /var/log/system.log')
+
+    if fwcode == 0 then
+        firewallStatusDot:setFillColor(hs.drawing.color.osx_green)
+    else
+        firewallStatusDot:setFillColor(hs.drawing.color.osx_red)
+    end
+
+    if ccccode == 0 then
+        cccStatusDot:setFillColor(hs.drawing.color.osx_green)
+    else
+        cccStatusDot:setFillColor(hs.drawing.color.osx_red)
+    end
+
+    if arqcode == 0 then
+        arqStatusDot:setFillColor(hs.drawing.color.osx_green)
+    else
+        arqStatusDot:setFillColor(hs.drawing.color.osx_red)
+    end
 end
 
 -- Reload config automatically
@@ -239,6 +305,16 @@ function reloadConfig()
     wifiWatcher = nil
 
     caffeine:delete()
+
+    statusletTimer:stop()
+    statusletTimer = nil
+
+    firewallStatusText:delete()
+    cccStatusText:delete()
+    arqStatusText:delete()
+    firewallStatusDot:delete()
+    cccStatusDot:delete()
+    arqStatusDot:delete()
 
     hs.reload()
 end
@@ -300,6 +376,10 @@ screenWatcher:start()
 
 wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
 wifiWatcher:start()
+
+statusletTimer = hs.timer.new(hs.timer.minutes(10), updateStatuslets)
+statusletTimer:start()
+updateStatuslets()
 
 -- Finally, show a notification that we finished loading the config successfully
 hs.notify.show("Hammerspoon", "", "Config loaded", "")
