@@ -51,8 +51,11 @@ local arqStatusText = hs.drawing.text(hs.geometry.rect(initialScreenFrame.x + in
                                                        statusTextWidth,
                                                        statusTextHeight), "Arq:")
 firewallStatusText:setTextSize(11)
+firewallStatusText:sendToBack()
 cccStatusText:setTextSize(11)
+cccStatusText:sendToBack()
 arqStatusText:setTextSize(11)
+arqStatusText:sendToBack()
 firewallStatusText:show()
 cccStatusText:show()
 arqStatusText:show()
@@ -70,12 +73,15 @@ local arqStatusDot = hs.drawing.circle(hs.geometry.rect(initialScreenFrame.x + i
                                                         statusDotWidth))
 firewallStatusDot:setFillColor(hs.drawing.color.osx_yellow)
 firewallStatusDot:setStroke(false)
+firewallStatusDot:sendToBack()
 firewallStatusDot:show()
 cccStatusDot:setFillColor(hs.drawing.color.osx_yellow)
 cccStatusDot:setStroke(false)
+cccStatusDot:sendToBack()
 cccStatusDot:show()
 arqStatusDot:setFillColor(hs.drawing.color.osx_yellow)
 arqStatusDot:setStroke(false)
+arqStatusDot:sendToBack()
 arqStatusDot:show()
 
 -- Define window layouts
@@ -235,11 +241,8 @@ end
 
 -- Perform tasks to configure the system for my home WiFi network
 function home_arrived()
-    print("volume...")
     hs.audiodevice.defaultOutputDevice():setVolume(25)
-    print("firewall...")
     os.execute("sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall off")
-    print("finder...")
     hs.applescript.applescript([[
         tell application "Finder"
             try
@@ -248,7 +251,6 @@ function home_arrived()
         end tell
     ]])
     updateStatuslets()
-    print("done.")
     hs.notify.show("Hammerspoon", "", "Unmuted volume, mounted volumes, disabled firewall", "")
 end
 
@@ -267,6 +269,7 @@ function home_departed()
 end
 
 function updateStatuslets()
+    print("updateStatuslets")
     _,_,fwcode = os.execute('sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getblockall | grep "block all non-essential"')
     _,_,ccccode = os.execute('~/bin/check_today_ccc.sh')
     _,_,arqcode = os.execute('grep -q "Arq.*finished backup" /var/log/system.log')
@@ -377,9 +380,16 @@ screenWatcher:start()
 wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
 wifiWatcher:start()
 
-statusletTimer = hs.timer.new(hs.timer.minutes(10), updateStatuslets)
+statusletTimer = hs.timer.new(hs.timer.minutes(5), updateStatuslets)
 statusletTimer:start()
 updateStatuslets()
+
+-- Make sure we have the right location settings
+if hs.wifi.currentNetwork() == "chrul" then
+    home_arrived()
+else
+    home_departed()
+end
 
 -- Finally, show a notification that we finished loading the config successfully
 hs.notify.show("Hammerspoon", "", "Config loaded", "")
