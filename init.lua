@@ -7,6 +7,7 @@ local appWatcher = nil
 local wifiWatcher = nil
 local screenWatcher = nil
 local statusletTimer = nil
+local mouseCircle = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
@@ -293,6 +294,20 @@ function updateStatuslets()
     end
 end
 
+function mouseHighlight()
+    if mouseCircle then
+        mouseCircle:delete()
+    end
+    mousepoint = hs.mouse.get()
+    mouseCircle = hs.drawing.circle(hs.geometry.rect(mousepoint.x-40, mousepoint.y-40, 80, 80))
+    mouseCircle:setStrokeColor({["red"]=1,["blue"]=0,["green"]=0,["alpha"]=1})
+    mouseCircle:setFill(false)
+    mouseCircle:setStrokeWidth(5)
+    mouseCircle:show()
+
+    hs.timer.doAfter(3, function() mouseCircle:delete() end)
+end
+
 -- Reload config automatically
 function reloadConfig()
     configFileWatcher:stop()
@@ -364,6 +379,7 @@ hs.hotkey.bind(hyper, 'n', function() os.execute("open ~") end)
 hs.hotkey.bind(hyper, 'c', caffeineClicked)
 hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
 hs.hotkey.bind(hyper, 'm', toggleSkypeMute)
+hs.hotkey.bind(hyper, 'd', mouseHighlight)
 -- Can't use this until we fix https://github.com/Hammerspoon/hammerspoon/issues/203
 --hs.hotkey.bind({}, 'F17', function() hs.eventtap.keyStrokes({}, hs.pasteboard.getContents()) end)
 
