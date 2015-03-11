@@ -8,6 +8,7 @@ local wifiWatcher = nil
 local screenWatcher = nil
 local statusletTimer = nil
 local mouseCircle = nil
+local mouseCircleTimer = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
@@ -33,57 +34,55 @@ local lastSSID = hs.wifi.currentNetwork()
 -- Defines for screen watcher
 local lastNumberOfScreens = #hs.screen.allScreens()
 
--- Defines for statuslets
+-- Defines for statuslets - little coloured dots in the corner of my screen that give me status info, see:
+-- https://www.dropbox.com/s/3v2vyhi1beyujtj/Screenshot%202015-03-11%2016.13.25.png?dl=0
 local initialScreenFrame = hs.screen.allScreens()[1]:fullFrame()
 
+-- Start off by declaring the size of the text/circle objects and some anchor positions for them on screen
+-- (Note: this is all very static right now, if the screen resolution changes, they will be in the wrong place. We should hook into our hs.screen.watcher below)
 local statusDotWidth = 10
 local statusTextWidth = 30
 local statusTextHeight = 15
-local firewallStatusText = hs.drawing.text(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth + 5,
-                                                            initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*3) + 2,
+local statusText_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth
+local statusText_y = initialScreenFrame.y + initialScreenFrame.h - statusTextHeight
+local statusDot_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth
+local statusDot_y = statusText_y
+
+-- Now create the text/circle objects using the sizes/positions we just declared (plus a little fudging to make it all align properly)
+local firewallStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 5,
+                                                            statusText_y - (statusTextHeight*2) + 2,
                                                             statusTextWidth,
                                                             statusTextHeight), "FW:")
-local cccStatusText = hs.drawing.text(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth,
-                                                       initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*2) + 1,
+local cccStatusText = hs.drawing.text(hs.geometry.rect(statusText_x,
+                                                       statusText_y - statusTextHeight + 1,
                                                        statusTextWidth,
                                                        statusTextHeight), "CCC:")
-local arqStatusText = hs.drawing.text(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth + 4,
-                                                       initialScreenFrame.y + initialScreenFrame.h - statusTextHeight,
+local arqStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 4,
+                                                       statusText_y,
                                                        statusTextWidth,
                                                        statusTextHeight), "Arq:")
-firewallStatusText:setTextSize(11)
-firewallStatusText:sendToBack()
-cccStatusText:setTextSize(11)
-cccStatusText:sendToBack()
-arqStatusText:setTextSize(11)
-arqStatusText:sendToBack()
-firewallStatusText:show()
-cccStatusText:show()
-arqStatusText:show()
-local firewallStatusDot = hs.drawing.circle(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth,
-                                                             initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*3) + 4,
+
+local firewallStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
+                                                             statusDot_y - (statusTextHeight*2) + 4,
                                                              statusDotWidth,
                                                              statusDotWidth))
-local cccStatusDot = hs.drawing.circle(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth,
-                                                        initialScreenFrame.y + initialScreenFrame.h - (statusTextHeight*2) + 3,
+local cccStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
+                                                        statusDot_y - statusTextHeight + 3,
                                                         statusDotWidth,
                                                         statusDotWidth))
-local arqStatusDot = hs.drawing.circle(hs.geometry.rect(initialScreenFrame.x + initialScreenFrame.w - statusDotWidth,
-                                                        initialScreenFrame.y + initialScreenFrame.h - statusTextHeight + 2,
+local arqStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
+                                                        statusDot_y + 2,
                                                         statusDotWidth,
                                                         statusDotWidth))
-firewallStatusDot:setFillColor(hs.drawing.color.osx_yellow)
-firewallStatusDot:setStroke(false)
-firewallStatusDot:sendToBack()
-firewallStatusDot:show()
-cccStatusDot:setFillColor(hs.drawing.color.osx_yellow)
-cccStatusDot:setStroke(false)
-cccStatusDot:sendToBack()
-cccStatusDot:show()
-arqStatusDot:setFillColor(hs.drawing.color.osx_yellow)
-arqStatusDot:setStroke(false)
-arqStatusDot:sendToBack()
-arqStatusDot:show()
+
+-- Finally, configure the rendering style of the text/circle objects, clamp them to the desktop, and show them
+firewallStatusText:setTextSize(11):sendToBack():show()
+cccStatusText:setTextSize(11):sendToBack():show()
+arqStatusText:setTextSize(11):sendToBack():show()
+
+firewallStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+cccStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+arqStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
 
 -- Define window layouts
 --   Format reminder:
@@ -122,8 +121,10 @@ local dual_display = {
 
 -- Helper functions
 
+-- Replace Caffeine.app with 18 lines of Lua :D
 -- NOTE: If you reload your config on a hotkey or a pathwatcher, you should call caffeine:delete() there
 local caffeine = hs.menubar.new()
+
 function setCaffeineDisplay(state)
     local result
     if state then
@@ -191,12 +192,14 @@ function toggle_application(_app)
         return
     end
     local mainwin = app:mainWindow()
-    if mainwin == hs.window.focusedWindow() then
-        mainwin:application():hide()
-    else
-        mainwin:application():activate(true)
-        mainwin:application():unhide()
-        mainwin:focus()
+    if mainwin then
+        if mainwin == hs.window.focusedWindow() then
+            mainwin:application():hide()
+        else
+            mainwin:application():activate(true)
+            mainwin:application():unhide()
+            mainwin:focus()
+        end
     end
 end
 
@@ -237,13 +240,20 @@ function screensChangedCallback()
         end
     end
 
+    -- FIXME: We should really be calling a function here that destroys and re-creates the statuslets, in case they need to be in new places
+
     lastNumberOfScreens = newNumberOfScreens
 end
 
 -- Perform tasks to configure the system for my home WiFi network
 function home_arrived()
     hs.audiodevice.defaultOutputDevice():setVolume(25)
+
+    -- Note: sudo commands will need to have been pre-configured in /etc/sudoers, for passwordless access, e.g.:
+    -- cmsj ALL=(root) NOPASSWD: /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall *
     os.execute("sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall off")
+
+    -- Mount my mac mini's DAS
     hs.applescript.applescript([[
         tell application "Finder"
             try
@@ -272,7 +282,9 @@ end
 function updateStatuslets()
     print("updateStatuslets")
     _,_,fwcode = os.execute('sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getblockall | grep "block all non-essential"')
-    _,_,ccccode = os.execute('~/bin/check_today_ccc.sh')
+
+    -- FIXME: Something is very wrong with this CCC call, it hangs frequently, causing Hammerspoon to block here :(
+    _,_,ccccode = os.execute('/Applications/Carbon\\ Copy\\ Cloner.app/Contents/MacOS/ccc --history 2>/dev/null | grep "^Nightly clone to servukipa" | grep "$(date +%d/%m/%Y)" | awk \'BEGIN {FS="|"} { print $NF }\' | grep -q "^Success$"')
     _,_,arqcode = os.execute('grep -q "Arq.*finished backup" /var/log/system.log')
 
     if fwcode == 0 then
@@ -294,9 +306,14 @@ function updateStatuslets()
     end
 end
 
+-- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
+-- This draws a bright red circle around the pointer for a few seconds
 function mouseHighlight()
     if mouseCircle then
         mouseCircle:delete()
+        if mouseCircleTimer then
+            mouseCircleTimer:stop()
+        end
     end
     mousepoint = hs.mouse.get()
     mouseCircle = hs.drawing.circle(hs.geometry.rect(mousepoint.x-40, mousepoint.y-40, 80, 80))
@@ -305,10 +322,10 @@ function mouseHighlight()
     mouseCircle:setStrokeWidth(5)
     mouseCircle:show()
 
-    hs.timer.doAfter(3, function() mouseCircle:delete() end)
+    mouseCircleTimer = hs.timer.doAfter(3, function() mouseCircle:delete() end)
 end
 
--- Reload config automatically
+-- Reload config, destroying any watcher/statuslet/etc objects first, so they don't linger
 function reloadConfig()
     configFileWatcher:stop()
     configFileWatcher = nil
@@ -337,7 +354,7 @@ function reloadConfig()
     hs.reload()
 end
 
--- Hotkeys to move windows between screens
+-- Hotkeys to move windows between screens, retaining their position/size relative to the screen
 hs.hotkey.bind(hyper, 'Left', function() hs.window.focusedWindow():moveOneScreenWest() end)
 hs.hotkey.bind(hyper, 'Right', function() hs.window.focusedWindow():moveOneScreenEast() end)
 
@@ -354,22 +371,24 @@ hs.hotkey.bind(hyper, '1', function() hs.layout.apply(internal_display) end)
 hs.hotkey.bind(hyper, '2', function() hs.layout.apply(dual_display) end)
 
 -- Application hotkeys
-hs.hotkey.bind(hyper, '`', function() hs.application.launchOrFocus("iTerm") end)
+hs.hotkey.bind(hyper, 'e', function() hs.application.launchOrFocus("iTerm") end)
 hs.hotkey.bind(hyper, 'q', function() toggle_application("Safari") end)
 hs.hotkey.bind(hyper, 'z', function() toggle_application("Reeder") end)
 hs.hotkey.bind(hyper, 'w', function() toggle_application("IRC") end)
 
--- Lighting hotkeys
-hs.hotkey.bind({}, 'f5', function()
+-- Hotkeys to control the lighting in my office
+local officeBrightnessDown = function()
     brightness = brightness - 1
     brightness = officeLED:zoneBrightness(1, brightness)
     officeLED:zoneBrightness(2, brightness - 3)
-end)
-hs.hotkey.bind({}, 'f6', function()
+end
+local officeBrightnessUp = function()
     brightness = brightness + 1
     brightness = officeLED:zoneBrightness(1, brightness)
     officeLED:zoneBrightness(2, brightness - 3)
-end)
+end
+hs.hotkey.bind({}, 'f5', officeBrightnessDown, nil, officeBrightnessDown)
+hs.hotkey.bind({}, 'f6', officeBrightnessUp, nil, officeBrightnessUp)
 hs.hotkey.bind(hyper, 'f5', function() brightness = officeLED:zoneBrightness(0, hs.milight.minBrightness) end)
 hs.hotkey.bind(hyper, 'f6', function() brightness = officeLED:zoneBrightness(0, hs.milight.maxBrightness) end)
 
@@ -380,6 +399,7 @@ hs.hotkey.bind(hyper, 'c', caffeineClicked)
 hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
 hs.hotkey.bind(hyper, 'm', toggleSkypeMute)
 hs.hotkey.bind(hyper, 'd', mouseHighlight)
+
 -- Can't use this until we fix https://github.com/Hammerspoon/hammerspoon/issues/203
 --hs.hotkey.bind({}, 'F17', function() hs.eventtap.keyStrokes({}, hs.pasteboard.getContents()) end)
 
