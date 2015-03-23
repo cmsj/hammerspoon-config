@@ -405,8 +405,8 @@ function reloadConfig(paths)
 end
 
 -- Hotkeys to move windows between screens, retaining their position/size relative to the screen
-hs.hotkey.bind({}, 'pad4', function() hs.window.focusedWindow():moveOneScreenWest() end)
-hs.hotkey.bind({}, 'pad5', function() hs.window.focusedWindow():moveOneScreenEast() end)
+hs.urlevent.bind('hyperfnleft', function() hs.window.focusedWindow():moveOneScreenWest() end)
+hs.urlevent.bind('hyperfnright', function() hs.window.focusedWindow():moveOneScreenEast() end)
 
 -- Hotkeys to resize windows absolutely
 hs.hotkey.bind(hyper, 'a', function() hs.window.focusedWindow():moveToUnit(hs.layout.left30) end)
