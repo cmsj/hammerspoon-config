@@ -34,6 +34,15 @@ local lastSSID = hs.wifi.currentNetwork()
 -- Defines for screen watcher
 local lastNumberOfScreens = #hs.screen.allScreens()
 
+-- Defines for window grid
+hs.grid.GRIDWIDTH = 4
+hs.grid.GRIDHEIGHT = 4
+hs.grid.MARGINX = 0
+hs.grid.MARGINY = 0
+
+-- Defines for window maximize toggler
+local frameCache = {}
+
 -- Defines for statuslets - little coloured dots in the corner of my screen that give me status info, see:
 -- https://www.dropbox.com/s/3v2vyhi1beyujtj/Screenshot%202015-03-11%2016.13.25.png?dl=0
 local initialScreenFrame = hs.screen.allScreens()[1]:fullFrame()
@@ -87,6 +96,7 @@ arqStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBa
 -- Define window layouts
 --   Format reminder:
 --     {"App name", "Window name", "Display Name", "unitrect", "framerect", "fullframerect"},
+local iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_laptop, nil, nil, hs.geometry.rect(0, -48, 400, 48)}
 local internal_display = {
     {"IRC",               nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Reeder",            nil,          display_laptop, hs.layout.left30,    nil, nil},
@@ -100,7 +110,7 @@ local internal_display = {
     {"Messages",          nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Evernote",          nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"iTunes",            "iTunes",     display_laptop, hs.layout.maximized, nil, nil},
-    {"iTunes",            "MiniPlayer", display_laptop, nil,       nil, hs.geometry.rect(0, -48, 400, 48)},
+    iTunesMiniPlayerLayout,
 }
 
 local dual_display = {
@@ -116,7 +126,7 @@ local dual_display = {
     {"Messages",          nil,          display_laptop,  hs.layout.maximized, nil, nil},
     {"Evernote",          nil,          display_monitor, hs.layout.right50,   nil, nil},
     {"iTunes",            "iTunes",     display_laptop,  hs.layout.maximized, nil, nil},
-    {"iTunes",            "MiniPlayer", display_laptop,  nil,       nil, hs.geometry.rect(0, -48, 400, 48)},
+    iTunesMiniPlayerLayout,
 }
 
 -- Helper functions
@@ -150,7 +160,7 @@ function toggle_audio_output()
     local headphones = hs.audiodevice.findOutputByName(headphoneDevice)
 
     if not speakers or not headphones then
-        hs.notify.show("Hammerspoon", "", "ERROR: Some audio devices missing", "")
+        hs.notify.new({title="Hammerspoon", informativeText="ERROR: Some audio devices missing", ""}):send():release()
         return
     end
 
@@ -159,7 +169,10 @@ function toggle_audio_output()
     else
         speakers:setDefaultOutputDevice()
     end
-    hs.notify.show("Hammerspoon", "Default output device:", hs.audiodevice.defaultOutputDevice():name(), "")
+    hs.notify.new({
+          title='Hammerspoon',
+            informativeText='Default output device:'..hs.audiodevice.defaultOutputDevice():name()
+        }):send():release()
 end
 
 -- Toggle Skype between muted/unmuted, whether it is focused or not
@@ -203,12 +216,34 @@ function toggle_application(_app)
     end
 end
 
+-- Toggle a window between its normal size, and being maximized
+function toggle_window_maximized()
+    local win = hs.window.focusedWindow()
+    if frameCache[win:id()] then
+        win:setFrame(frameCache[win:id()])
+        frameCache[win:id()] = nil
+    else
+        frameCache[win:id()] = win:frame()
+        win:maximize()
+    end
+end
+
 -- Callback function for application events
 function applicationWatcher(appName, eventType, appObject)
     if (eventType == hs.application.watcher.activated) then
         if (appName == "Finder") then
             -- Bring all Finder windows forward when one gets activated
             appObject:selectMenuItem({"Window", "Bring All to Front"})
+        elseif (appName == "iTunes") then
+            -- Ensure the MiniPlayer window is visible and correctly placed, since it likes to hide an awful lot
+            state = appObject:findMenuItem({"Window", "MiniPlayer"})
+            if not state["ticked"] then
+                appObject:selectMenuItem({"Window", "MiniPlayer"})
+            end
+            _animationDuration = hs.window.animationDuration
+            hs.window.animationDuration = 0
+            hs.layout.apply({ iTunesMiniPlayerLayout })
+            hs.window.animationDuration = _animationDuration
         end
     end
 end
@@ -262,7 +297,10 @@ function home_arrived()
         end tell
     ]])
     updateStatuslets()
-    hs.notify.show("Hammerspoon", "", "Unmuted volume, mounted volumes, disabled firewall", "")
+    hs.notify.new({
+          title='Hammerspoon',
+            informativeText='Unmuted volume, mounted volumes, disabled firewall'
+        }):send():release()
 end
 
 -- Perform tasks to configure the system for any WiFi network other than my home
@@ -276,7 +314,10 @@ function home_departed()
     ]])
     updateStatuslets()
 
-    hs.notify.show("Hammerspoon", "", "Muted volume, unmounted volumes, enabled firewall", "")
+    hs.notify.new({
+          title='Hammerspoon',
+            informativeText='Muted volume, unmounted volumes, enabled firewall'
+        }):send():release()
 end
 
 function updateStatuslets()
@@ -326,7 +367,19 @@ function mouseHighlight()
 end
 
 -- Reload config, destroying any watcher/statuslet/etc objects first, so they don't linger
-function reloadConfig()
+function reloadConfig(paths)
+    doReload = false
+    for _,file in pairs(paths) do
+        if file:sub(-4) == ".lua" then
+            print("A lua file changed, doing reload")
+            doReload = true
+        end
+    end
+    if not doReload then
+        print("No lua file changed, skipping reload")
+        return
+    end
+
     configFileWatcher:stop()
     configFileWatcher = nil
 
@@ -355,23 +408,34 @@ function reloadConfig()
 end
 
 -- Hotkeys to move windows between screens, retaining their position/size relative to the screen
-hs.hotkey.bind(hyper, 'Left', function() hs.window.focusedWindow():moveOneScreenWest() end)
-hs.hotkey.bind(hyper, 'Right', function() hs.window.focusedWindow():moveOneScreenEast() end)
+hs.hotkey.bind({}, 'pad4', function() hs.window.focusedWindow():moveOneScreenWest() end)
+hs.hotkey.bind({}, 'pad5', function() hs.window.focusedWindow():moveOneScreenEast() end)
 
 -- Hotkeys to resize windows absolutely
 hs.hotkey.bind(hyper, 'a', function() hs.window.focusedWindow():moveToUnit(hs.layout.left30) end)
 hs.hotkey.bind(hyper, 's', function() hs.window.focusedWindow():moveToUnit(hs.layout.right70) end)
 hs.hotkey.bind(hyper, '[', function() hs.window.focusedWindow():moveToUnit(hs.layout.left50) end)
 hs.hotkey.bind(hyper, ']', function() hs.window.focusedWindow():moveToUnit(hs.layout.right50) end)
-hs.hotkey.bind(hyper, 'f', function() hs.window.focusedWindow():maximize() end)
+hs.hotkey.bind(hyper, 'f', toggle_window_maximized)
 hs.hotkey.bind(hyper, 'r', function() hs.window.focusedWindow():toggleFullScreen() end)
 
 -- Hotkeys to trigger defined layouts
 hs.hotkey.bind(hyper, '1', function() hs.layout.apply(internal_display) end)
 hs.hotkey.bind(hyper, '2', function() hs.layout.apply(dual_display) end)
 
+-- Hotkeys to interact with the window grid
+hs.hotkey.bind({}, 'F13', hs.grid.pushWindowLeft)
+hs.hotkey.bind({}, 'F14', hs.grid.pushWindowRight)
+hs.hotkey.bind({}, 'F15', hs.grid.pushWindowUp)
+hs.hotkey.bind({}, 'F16', hs.grid.pushWindowDown)
+
+hs.hotkey.bind({}, 'pad0', hs.grid.resizeWindowThinner)
+hs.hotkey.bind({}, 'pad1', hs.grid.resizeWindowWider)
+hs.hotkey.bind({}, 'pad2', hs.grid.resizeWindowShorter)
+hs.hotkey.bind({}, 'pad3', hs.grid.resizeWindowTaller)
+
 -- Application hotkeys
-hs.hotkey.bind(hyper, 'e', function() hs.application.launchOrFocus("iTerm") end)
+hs.hotkey.bind(hyper, 'e', function() toggle_application("iTerm") end)
 hs.hotkey.bind(hyper, 'q', function() toggle_application("Safari") end)
 hs.hotkey.bind(hyper, 'z', function() toggle_application("Reeder") end)
 hs.hotkey.bind(hyper, 'w', function() toggle_application("IRC") end)
@@ -400,13 +464,11 @@ hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
 hs.hotkey.bind(hyper, 'm', toggleSkypeMute)
 hs.hotkey.bind(hyper, 'd', mouseHighlight)
 
--- Can't use this until we fix https://github.com/Hammerspoon/hammerspoon/issues/203
---hs.hotkey.bind({}, 'F17', function() hs.eventtap.keyStrokes({}, hs.pasteboard.getContents()) end)
+-- Type the current clipboard, to get around web forms that don't let you paste
+-- (Note: I have Fn-v mapped to F17 in Karabiner)
+hs.hotkey.bind({}, 'F17', function() hs.eventtap.keyStrokes(hs.pasteboard.getContents()) end)
 
 -- Create and start our callbacks
-configFileWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig)
-configFileWatcher:start()
-
 appWatcher = hs.application.watcher.new(applicationWatcher)
 appWatcher:start()
 
@@ -420,6 +482,9 @@ statusletTimer = hs.timer.new(hs.timer.minutes(5), updateStatuslets)
 statusletTimer:start()
 updateStatuslets()
 
+configFileWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig)
+configFileWatcher:start()
+
 -- Make sure we have the right location settings
 if hs.wifi.currentNetwork() == "chrul" then
     home_arrived()
@@ -428,14 +493,17 @@ else
 end
 
 -- Finally, show a notification that we finished loading the config successfully
-hs.notify.show("Hammerspoon", "", "Config loaded", "")
+hs.notify.new({
+      title='Hammerspoon',
+        informativeText='Config loaded'
+    }):send():release()
 
 -- This is some developer debugging stuff. It will cause Hammerspoon to crash if any Lua is being executed on the wrong thread. You probably don't want this in your config :)
-local function crashifnotmain(reason)
---  print("crashifnotmain called with reason", reason) -- may want to remove this, very verbose otherwise
-  if not hs.crash.isMainThread() then
-    print("not in main thread, crashing")
-    hs.crash.crash()
-  end
-end
-debug.sethook(crashifnotmain, 'c')
+-- local function crashifnotmain(reason)
+-- --  print("crashifnotmain called with reason", reason) -- may want to remove this, very verbose otherwise
+--   if not hs.crash.isMainThread() then
+--     print("not in main thread, crashing")
+--     hs.crash.crash()
+--   end
+-- end
+-- debug.sethook(crashifnotmain, 'c')
