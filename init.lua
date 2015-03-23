@@ -237,7 +237,7 @@ function applicationWatcher(appName, eventType, appObject)
         elseif (appName == "iTunes") then
             -- Ensure the MiniPlayer window is visible and correctly placed, since it likes to hide an awful lot
             state = appObject:findMenuItem({"Window", "MiniPlayer"})
-            if not state["ticked"] then
+            if state and not state["ticked"] then
                 appObject:selectMenuItem({"Window", "MiniPlayer"})
             end
             _animationDuration = hs.window.animationDuration
@@ -383,9 +383,6 @@ function reloadConfig(paths)
     configFileWatcher:stop()
     configFileWatcher = nil
 
-    appWatcher:stop()
-    appWatcher = nil
-
     screenWatcher:stop()
     screenWatcher = nil
 
@@ -424,15 +421,15 @@ hs.hotkey.bind(hyper, '1', function() hs.layout.apply(internal_display) end)
 hs.hotkey.bind(hyper, '2', function() hs.layout.apply(dual_display) end)
 
 -- Hotkeys to interact with the window grid
-hs.hotkey.bind({}, 'F13', hs.grid.pushWindowLeft)
-hs.hotkey.bind({}, 'F14', hs.grid.pushWindowRight)
-hs.hotkey.bind({}, 'F15', hs.grid.pushWindowUp)
-hs.hotkey.bind({}, 'F16', hs.grid.pushWindowDown)
+hs.hotkey.bind(hyper, 'Left', hs.grid.pushWindowLeft)
+hs.hotkey.bind(hyper, 'Right', hs.grid.pushWindowRight)
+hs.hotkey.bind(hyper, 'Up', hs.grid.pushWindowUp)
+hs.hotkey.bind(hyper, 'Down', hs.grid.pushWindowDown)
 
-hs.hotkey.bind({}, 'pad0', hs.grid.resizeWindowThinner)
-hs.hotkey.bind({}, 'pad1', hs.grid.resizeWindowWider)
-hs.hotkey.bind({}, 'pad2', hs.grid.resizeWindowShorter)
-hs.hotkey.bind({}, 'pad3', hs.grid.resizeWindowTaller)
+hs.urlevent.bind('hypershiftleft', hs.grid.resizeWindowThinner)
+hs.urlevent.bind('hypershiftright', hs.grid.resizeWindowWider)
+hs.urlevent.bind('hypershiftup', hs.grid.resizeWindowShorter)
+hs.urlevent.bind('hypershiftdown', hs.grid.resizeWindowTaller)
 
 -- Application hotkeys
 hs.hotkey.bind(hyper, 'e', function() toggle_application("iTerm") end)
@@ -466,7 +463,7 @@ hs.hotkey.bind(hyper, 'd', mouseHighlight)
 
 -- Type the current clipboard, to get around web forms that don't let you paste
 -- (Note: I have Fn-v mapped to F17 in Karabiner)
-hs.hotkey.bind({}, 'F17', function() hs.eventtap.keyStrokes(hs.pasteboard.getContents()) end)
+hs.urlevent.bind('fnv', function() hs.eventtap.keyStrokes(hs.pasteboard.getContents()) end)
 
 -- Create and start our callbacks
 appWatcher = hs.application.watcher.new(applicationWatcher)
