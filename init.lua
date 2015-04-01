@@ -466,8 +466,9 @@ hs.hotkey.bind(hyper, 'd', mouseHighlight)
 hs.urlevent.bind('fnv', function() hs.eventtap.keyStrokes(hs.pasteboard.getContents()) end)
 
 -- Create and start our callbacks
-appWatcher = hs.application.watcher.new(applicationWatcher)
-appWatcher:start()
+--appWatcher = hs.application.watcher.new(applicationWatcher)
+--appWatcher:start()
+hs.application.watcher.new(applicationWatcher):start()
 
 screenWatcher = hs.screen.watcher.new(screensChangedCallback)
 screenWatcher:start()
