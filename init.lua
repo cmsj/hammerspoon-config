@@ -1,7 +1,7 @@
 -- Ensure the IPC command line client is available
 hs.ipc.cliInstall()
 
--- Things we need to clean up at reload
+-- Watchers and other useful objects
 local configFileWatcher = nil
 local appWatcher = nil
 local wifiWatcher = nil
@@ -132,7 +132,6 @@ local dual_display = {
 -- Helper functions
 
 -- Replace Caffeine.app with 18 lines of Lua :D
--- NOTE: If you reload your config on a hotkey or a pathwatcher, you should call caffeine:delete() there
 local caffeine = hs.menubar.new()
 
 function setCaffeineDisplay(state)
@@ -366,7 +365,7 @@ function mouseHighlight()
     mouseCircleTimer = hs.timer.doAfter(3, function() mouseCircle:delete() end)
 end
 
--- Reload config, destroying any watcher/statuslet/etc objects first, so they don't linger
+-- Reload config
 function reloadConfig(paths)
     doReload = false
     for _,file in pairs(paths) do
@@ -379,27 +378,6 @@ function reloadConfig(paths)
         print("No lua file changed, skipping reload")
         return
     end
-
-    configFileWatcher:stop()
-    configFileWatcher = nil
-
-    screenWatcher:stop()
-    screenWatcher = nil
-
-    wifiWatcher:stop()
-    wifiWatcher = nil
-
-    caffeine:delete()
-
-    statusletTimer:stop()
-    statusletTimer = nil
-
-    firewallStatusText:delete()
-    cccStatusText:delete()
-    arqStatusText:delete()
-    firewallStatusDot:delete()
-    cccStatusDot:delete()
-    arqStatusDot:delete()
 
     hs.reload()
 end
@@ -466,8 +444,6 @@ hs.hotkey.bind(hyper, 'd', mouseHighlight)
 hs.urlevent.bind('fnv', function() hs.eventtap.keyStrokes(hs.pasteboard.getContents()) end)
 
 -- Create and start our callbacks
---appWatcher = hs.application.watcher.new(applicationWatcher)
---appWatcher:start()
 hs.application.watcher.new(applicationWatcher):start()
 
 screenWatcher = hs.screen.watcher.new(screensChangedCallback)
