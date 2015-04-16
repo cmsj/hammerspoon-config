@@ -402,6 +402,23 @@ function mouseHighlight()
     mouseCircleTimer = hs.timer.doAfter(3, function() mouseCircle:delete() end)
 end
 
+-- Rather than switch to Safari, copy the current URL, switch back to the previous app and paste,
+-- This is a function that fetches the current URL from Safari and types it
+function typeCurrentSafariURL()
+    script = [[
+    tell application "Safari"
+        set currentURL to URL of document 1
+    end tell
+
+    return currentURL
+    ]]
+    ok, result = hs.applescript(script)
+    if (ok) then
+        print(result)
+        hs.eventtap.keyStrokes(result)
+    end
+end
+
 -- Reload config
 function reloadConfig(paths)
     doReload = false
@@ -475,6 +492,7 @@ hs.hotkey.bind(hyper, 'c', caffeineClicked)
 hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
 hs.hotkey.bind(hyper, 'm', toggleSkypeMute)
 hs.hotkey.bind(hyper, 'd', mouseHighlight)
+hs.hotkey.bind(hyper, 'u', typeCurrentSafariURL)
 
 -- Type the current clipboard, to get around web forms that don't let you paste
 -- (Note: I have Fn-v mapped to F17 in Karabiner)
