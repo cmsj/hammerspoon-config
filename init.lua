@@ -6,6 +6,7 @@ local configFileWatcher = nil
 local appWatcher = nil
 local wifiWatcher = nil
 local screenWatcher = nil
+local usbWatcher = nil
 
 local mouseCircle = nil
 local mouseCircleTimer = nil
@@ -281,6 +282,20 @@ function ssidChangedCallback()
     lastSSID = newSSID
 end
 
+-- Callback function for USB device events
+function usbDeviceCallback(data)
+    print("usbDeviceCallback: "..hs.inspect(data))
+    if (data["productName"] == "ScanSnap S1300i") then
+        event = data["eventType"]
+        if (event == "added") then
+            hs.application.launchOrFocus("ScanSnap Manager")
+        elseif (event == "removed") then
+            app = hs.appfinder.appFromName("ScanSnap Manager")
+            app:kill()
+        end
+    end
+end
+
 -- Callback function for changes in screen layout
 function screensChangedCallback()
     newNumberOfScreens = #hs.screen.allScreens()
@@ -473,6 +488,9 @@ screenWatcher:start()
 
 wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
 wifiWatcher:start()
+
+usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
+usbWatcher:start()
 
 -- Render our statuslets, trigger a timer to update them regularly, and do an initial update
 renderStatuslets()
