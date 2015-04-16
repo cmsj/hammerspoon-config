@@ -6,9 +6,17 @@ local configFileWatcher = nil
 local appWatcher = nil
 local wifiWatcher = nil
 local screenWatcher = nil
-local statusletTimer = nil
+
 local mouseCircle = nil
 local mouseCircleTimer = nil
+
+local statusletTimer = nil
+local firewallStatusText = nil
+local firewallStatusDot = nil
+local cccStatusText = nil
+local cccStatusDot = nil
+local arqStatusText = nil
+local arqStatusDot = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
@@ -42,56 +50,6 @@ hs.grid.MARGINY = 0
 
 -- Defines for window maximize toggler
 local frameCache = {}
-
--- Defines for statuslets - little coloured dots in the corner of my screen that give me status info, see:
--- https://www.dropbox.com/s/3v2vyhi1beyujtj/Screenshot%202015-03-11%2016.13.25.png?dl=0
-local initialScreenFrame = hs.screen.allScreens()[1]:fullFrame()
-
--- Start off by declaring the size of the text/circle objects and some anchor positions for them on screen
--- (Note: this is all very static right now, if the screen resolution changes, they will be in the wrong place. We should hook into our hs.screen.watcher below)
-local statusDotWidth = 10
-local statusTextWidth = 30
-local statusTextHeight = 15
-local statusText_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth
-local statusText_y = initialScreenFrame.y + initialScreenFrame.h - statusTextHeight
-local statusDot_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth
-local statusDot_y = statusText_y
-
--- Now create the text/circle objects using the sizes/positions we just declared (plus a little fudging to make it all align properly)
-local firewallStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 5,
-                                                            statusText_y - (statusTextHeight*2) + 2,
-                                                            statusTextWidth,
-                                                            statusTextHeight), "FW:")
-local cccStatusText = hs.drawing.text(hs.geometry.rect(statusText_x,
-                                                       statusText_y - statusTextHeight + 1,
-                                                       statusTextWidth,
-                                                       statusTextHeight), "CCC:")
-local arqStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 4,
-                                                       statusText_y,
-                                                       statusTextWidth,
-                                                       statusTextHeight), "Arq:")
-
-local firewallStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                             statusDot_y - (statusTextHeight*2) + 4,
-                                                             statusDotWidth,
-                                                             statusDotWidth))
-local cccStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                        statusDot_y - statusTextHeight + 3,
-                                                        statusDotWidth,
-                                                        statusDotWidth))
-local arqStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                        statusDot_y + 2,
-                                                        statusDotWidth,
-                                                        statusDotWidth))
-
--- Finally, configure the rendering style of the text/circle objects, clamp them to the desktop, and show them
-firewallStatusText:setTextSize(11):sendToBack():show()
-cccStatusText:setTextSize(11):sendToBack():show()
-arqStatusText:setTextSize(11):sendToBack():show()
-
-firewallStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
-cccStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
-arqStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
 
 -- Define window layouts
 --   Format reminder:
@@ -227,6 +185,67 @@ function toggle_window_maximized()
     end
 end
 
+-- Draw little text/dot pairs in the bottom right corner of the primary display, to indicate firewall/backup status of my machine
+function renderStatuslets()
+    -- Destroy existing Statuslets
+    if firewallStatusText then firewallStatusText:delete() end
+    if firewallStatusDot then firewallStatusDot:delete() end
+    if cccStatusText then cccStatusText:delete() end
+    if cccStatusDot then cccStatusDot:delete() end
+    if arqStatusText then arqStatusText:delete() end
+    if arqStatusDot then arqStatusDot:delete() end
+
+    -- Defines for statuslets - little coloured dots in the corner of my screen that give me status info, see:
+    -- https://www.dropbox.com/s/3v2vyhi1beyujtj/Screenshot%202015-03-11%2016.13.25.png?dl=0
+    local initialScreenFrame = hs.screen.allScreens()[1]:fullFrame()
+
+    -- Start off by declaring the size of the text/circle objects and some anchor positions for them on screen
+    local statusDotWidth = 10
+    local statusTextWidth = 30
+    local statusTextHeight = 15
+    local statusText_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth
+    local statusText_y = initialScreenFrame.y + initialScreenFrame.h - statusTextHeight
+    local statusDot_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth
+    local statusDot_y = statusText_y
+
+    -- Now create the text/circle objects using the sizes/positions we just declared (plus a little fudging to make it all align properly)
+    firewallStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 5,
+                                                          statusText_y - (statusTextHeight*2) + 2,
+                                                          statusTextWidth,
+                                                          statusTextHeight), "FW:")
+    cccStatusText = hs.drawing.text(hs.geometry.rect(statusText_x,
+                                                     statusText_y - statusTextHeight + 1,
+                                                     statusTextWidth,
+                                                     statusTextHeight), "CCC:")
+    arqStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 4,
+                                                     statusText_y,
+                                                     statusTextWidth,
+                                                     statusTextHeight), "Arq:")
+
+    firewallStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
+                                                           statusDot_y - (statusTextHeight*2) + 4,
+                                                           statusDotWidth,
+                                                           statusDotWidth))
+    cccStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
+                                                      statusDot_y - statusTextHeight + 3,
+                                                      statusDotWidth,
+                                                      statusDotWidth))
+    arqStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
+                                                      statusDot_y + 2,
+                                                      statusDotWidth,
+                                                      statusDotWidth))
+
+    -- Finally, configure the rendering style of the text/circle objects, clamp them to the desktop, and show them
+    firewallStatusText:setTextSize(11):sendToBack():show()
+    cccStatusText:setTextSize(11):sendToBack():show()
+    arqStatusText:setTextSize(11):sendToBack():show()
+
+    firewallStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+    cccStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+    arqStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+end
+
+
 -- Callback function for application events
 function applicationWatcher(appName, eventType, appObject)
     if (eventType == hs.application.watcher.activated) then
@@ -277,6 +296,9 @@ function screensChangedCallback()
     -- FIXME: We should really be calling a function here that destroys and re-creates the statuslets, in case they need to be in new places
 
     lastNumberOfScreens = newNumberOfScreens
+
+    renderStatuslets()
+    updateStatuslets()
 end
 
 -- Perform tasks to configure the system for my home WiFi network
@@ -452,6 +474,8 @@ screenWatcher:start()
 wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
 wifiWatcher:start()
 
+-- Render our statuslets, trigger a timer to update them regularly, and do an initial update
+renderStatuslets()
 statusletTimer = hs.timer.new(hs.timer.minutes(5), updateStatuslets)
 statusletTimer:start()
 updateStatuslets()
