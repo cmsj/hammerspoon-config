@@ -414,7 +414,6 @@ function typeCurrentSafariURL()
     ]]
     ok, result = hs.applescript(script)
     if (ok) then
-        print(result)
         hs.eventtap.keyStrokes(result)
     end
 end
