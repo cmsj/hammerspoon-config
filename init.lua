@@ -1,3 +1,6 @@
+-- Capture the hostname, so we can make this config behave differently across my Macs
+hostname = hs.host.localizedName()
+
 -- Ensure the IPC command line client is available
 hs.ipc.cliInstall()
 
@@ -188,6 +191,9 @@ end
 
 -- Draw little text/dot pairs in the bottom right corner of the primary display, to indicate firewall/backup status of my machine
 function renderStatuslets()
+    if (hostname ~= "pixukipa") then
+        return
+    end
     -- Destroy existing Statuslets
     if firewallStatusText then firewallStatusText:delete() end
     if firewallStatusDot then firewallStatusDot:delete() end
@@ -308,8 +314,6 @@ function screensChangedCallback()
         end
     end
 
-    -- FIXME: We should really be calling a function here that destroys and re-creates the statuslets, in case they need to be in new places
-
     lastNumberOfScreens = newNumberOfScreens
 
     renderStatuslets()
@@ -357,6 +361,9 @@ function home_departed()
 end
 
 function updateStatuslets()
+    if (hostname ~= "pixukipa") then
+        return
+    end
     print("updateStatuslets")
     _,_,fwcode = os.execute('sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getblockall | grep "block all non-essential"')
 
@@ -507,8 +514,10 @@ screenWatcher:start()
 wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
 wifiWatcher:start()
 
-usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
-usbWatcher:start()
+if (hostname == "pixukipa") then
+    usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
+    usbWatcher:start()
+end
 
 -- Render our statuslets, trigger a timer to update them regularly, and do an initial update
 renderStatuslets()
