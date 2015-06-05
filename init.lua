@@ -277,6 +277,7 @@ end
 function ssidChangedCallback()
     newSSID = hs.wifi.currentNetwork()
 
+    print("ssidChangedCallback: old:"..(lastSSID or "nil").." new:"..(newSSID or "nil"))
     if newSSID == homeSSID and lastSSID ~= homeSSID then
         -- We have gone from something that isn't my home WiFi, to something that is
         home_arrived()
@@ -366,10 +367,7 @@ function updateStatuslets()
     end
     print("updateStatuslets")
     _,_,fwcode = os.execute('sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getblockall | grep "block all non-essential"')
-
-    -- FIXME: Something is very wrong with this CCC call, it hangs frequently, causing Hammerspoon to block here :(
-    --_,_,ccccode = os.execute('/Applications/Carbon\\ Copy\\ Cloner.app/Contents/MacOS/ccc --history 2>/dev/null | grep "^Nightly clone to servukipa" | grep "$(date +%d/%m/%Y)" | awk \'BEGIN {FS="|"} { print $NF }\' | grep -q "^Success$"')
-    ccccode = 1
+    _,_,ccccode = os.execute('grep -q "$(date +%d/%m/%Y)" ~/.cccLast')
     _,_,arqcode = os.execute('grep -q "Arq.*finished backup" /var/log/system.log')
 
     if fwcode == 0 then
@@ -405,6 +403,7 @@ function mouseHighlight()
     mouseCircle:setStrokeColor({["red"]=1,["blue"]=0,["green"]=0,["alpha"]=1})
     mouseCircle:setFill(false)
     mouseCircle:setStrokeWidth(5)
+    mouseCircle:bringToFront(true)
     mouseCircle:show()
 
     mouseCircleTimer = hs.timer.doAfter(3, function() mouseCircle:delete() end)
