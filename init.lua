@@ -322,7 +322,8 @@ end
 -- Callback function for changes in screen layout
 function screensChangedCallback()
     newNumberOfScreens = #hs.screen.allScreens()
-
+-
+    -- FIXME: This is awful if we swap primary screen to the external display. all the windows swap around, pointlessly.
     if lastNumberOfScreens ~= newNumberOfScreens then
         if newNumberOfScreens == 1 then
             hs.layout.apply(internal_display)
