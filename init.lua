@@ -242,13 +242,13 @@ function renderStatuslets()
                                                       statusDotWidth))
 
     -- Finally, configure the rendering style of the text/circle objects, clamp them to the desktop, and show them
-    firewallStatusText:setTextSize(11):sendToBack():show()
-    cccStatusText:setTextSize(11):sendToBack():show()
-    arqStatusText:setTextSize(11):sendToBack():show()
+    firewallStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show()
+    cccStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show()
+    arqStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show()
 
-    firewallStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
-    cccStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
-    arqStatusDot:setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+    firewallStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+    cccStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+    arqStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
 end
 
 
@@ -562,6 +562,7 @@ applePayStatuslet = hs.drawing.text(hs.geometry.rect(screenFrame.x + screenFrame
 local applePayMonitorCallback = function(code, body, headers)
     -- Check if we got a valid HTTP response
     if (code == 200) then
+        print(body)
         local regions = ""
         -- Build up a single string listing all of the currently supported regions
         for region,_data in pairs(hs.json.decode(body)["SupportedRegions"]) do
@@ -571,11 +572,12 @@ local applePayMonitorCallback = function(code, body, headers)
         applePayStatuslet:setText(" Pay: "..regions)
 
         -- Compare the md5 of the JSON to a value I pre-calculated when it was US-only
-        if ("65576d922df98c0d851ea59290f32978" ~= md5.sumhexa(body)) then
+        local newMD5 = md5.sumhexa(body)
+        if ("879bbc83e5b179ace747ad0db1f68aa4" ~= newMD5) then
             -- Send an iMessage to myself, because the JSON changed and that probably means I can use  Pay now :D
-            hs.messages.iMessage("cmsj@tenshu.net", "APPLE PAY PROVIDER CHANGED")
+            hs.messages.iMessage("cmsj@tenshu.net", "APPLE PAY CONFIGURATION CHANGED. New regions: "..regions)
             -- Capture the full HTTP response body in the Hammerspoon Console Window
-            print(body)
+            print("New MD5: "..newMD5)
             -- Stop the timer, because I don't want an iMessage about this every 5 minutes.
             applePayMonitorTimer:stop()
         else
