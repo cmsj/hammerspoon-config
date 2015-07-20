@@ -551,52 +551,6 @@ else
     home_departed()
 end
 
--- Apple Pay Region Monitor. This is really just here temporarily so I can keep an eye on the UK launch of Apple Pay :)
--- Place https://raw.githubusercontent.com/kikito/md5.lua/master/md5.lua in ~/.hammerspoon/md5.lua
-local md5 = require("md5")
--- Fetch the geometry of the primary display
-local screenFrame = hs.screen.allScreens()[1]:fullFrame()
--- Create a text object near the bottom right of the display, and place it below the desktop icons
-applePayStatuslet = hs.drawing.text(hs.geometry.rect(screenFrame.x + screenFrame.w - 200, screenFrame.y + screenFrame.h - 28, 200, 15)):setTextSize(11):sendToBack():show()
--- Define a callback function to process the Apple Pay metadata JSON
-local applePayMonitorCallback = function(code, body, headers)
-    -- Check if we got a valid HTTP response
-    if (code == 200) then
-        print(body)
-        local regions = ""
-        -- Build up a single string listing all of the currently supported regions
-        for region,_data in pairs(hs.json.decode(body)["SupportedRegions"]) do
-            regions = regions..region.." "
-        end
-        -- Update the on-screen text object to display the list of regions
-        applePayStatuslet:setText(" Pay: "..regions)
-
-        -- Compare the md5 of the JSON to a value I pre-calculated when it was US-only
-        local newMD5 = md5.sumhexa(body)
-        if ("879bbc83e5b179ace747ad0db1f68aa4" ~= newMD5) then
-            -- Send an iMessage to myself, because the JSON changed and that probably means I can use  Pay now :D
-            hs.messages.iMessage("cmsj@tenshu.net", "APPLE PAY CONFIGURATION CHANGED. New regions: "..regions)
-            -- Capture the full HTTP response body in the Hammerspoon Console Window
-            print("New MD5: "..newMD5)
-            -- Stop the timer, because I don't want an iMessage about this every 5 minutes.
-            applePayMonitorTimer:stop()
-        else
-            print("Apple Pay provider unchanged")
-        end
-    else
-        hs.alert.show("ERROR: Unable to fetch Apple Pay provider: "..code)
-    end
-end
--- Define a function that asynchronously fetches the current  Pay configuration JSON and passes it to our callback
-local triggerApplePayHTTPCheck = function()
-    hs.http.asyncGet("https://smp-device-content.apple.com/static/region/v2/config.json", nil, applePayMonitorCallback)
-end
--- Set up a timer object that will call our configuration fetching function
-applePayMonitorTimer = hs.timer.new(300, triggerApplePayHTTPCheck)
-applePayMonitorTimer:start()
--- Trigger the fetching function immediately, so we don't have to wait 5 minutes for the first run
-triggerApplePayHTTPCheck()
-
 -- Finally, show a notification that we finished loading the config successfully
 hs.notify.new({
       title='Hammerspoon',
