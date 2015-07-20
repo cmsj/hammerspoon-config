@@ -23,7 +23,6 @@ local arqStatusDot = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
-local alt = {"⌥"}
 local hyper = {"⌘", "⌥", "⌃", "⇧"}
 
 -- Define monitor names for layout purposes
