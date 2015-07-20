@@ -268,7 +268,7 @@ function applicationWatcher(appName, eventType, appObject)
             hs.layout.apply({ iTunesMiniPlayerLayout })
             hs.window.animationDuration = _animationDuration
         end
-    elseif (eventType == hs.application.watcher.launched) then
+    elseif (eventType == hs.application.watcher.launching) then
         if (appName == "Call of Duty: Modern Warfare 3") then
             print("CoD Starting")
             hs.itunes.pause()
