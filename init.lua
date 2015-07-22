@@ -87,6 +87,7 @@ local dual_display = {
     {"Evernote",          nil,          display_monitor, hs.layout.right50,   nil, nil},
     {"iTunes",            "iTunes",     display_laptop,  hs.layout.maximized, nil, nil},
     iTunesMiniPlayerLayout,
+    {"iTerm",             nil,          display_monitor, hs.layout.right50,   nil, nil},
 }
 
 -- Helper functions
@@ -283,6 +284,9 @@ function applicationWatcher(appName, eventType, appObject)
             local mbDisplay = hs.screen.findByName("Color LCD")
             if (mbDisplay) then
                 mbDisplay:setPrimary()
+            end
+            if hs.screen.findByName("Thunderbolt Display") then
+                hs.layout.apply(dual_display)
             end
         end
     end
