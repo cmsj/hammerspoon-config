@@ -9,6 +9,7 @@ local configFileWatcher = nil
 local wifiWatcher = nil
 local screenWatcher = nil
 local usbWatcher = nil
+local caffeinateWatcher = nil
 
 local mouseCircle = nil
 local mouseCircleTimer = nil
@@ -322,6 +323,16 @@ function usbDeviceCallback(data)
     end
 end
 
+-- Callback function for caffeinate events
+function caffeinateCallback(eventType)
+    if (eventType == hs.caffeinate.watcher.screensDidSleep) then
+        officeLED:zoneOff(2)
+    elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
+        officeLED:zoneOn(2)
+        officeLED:zoneBrightness(2, hs.milight.minBrightness)
+    end
+end
+
 -- Callback function for changes in screen layout
 function screensChangedCallback()
     newNumberOfScreens = #hs.screen.allScreens()
@@ -573,17 +584,20 @@ hs.hotkey.bind(hyper, 'w', function() toggle_application("IRC") end)
 local officeBrightnessDown = function()
     brightness = brightness - 1
     brightness = officeLED:zoneBrightness(1, brightness)
-    officeLED:zoneBrightness(2, brightness - 3)
+    officeLED:zoneBrightness(2, hs.milight.minBrightness)
 end
 local officeBrightnessUp = function()
     brightness = brightness + 1
     brightness = officeLED:zoneBrightness(1, brightness)
-    officeLED:zoneBrightness(2, brightness - 3)
+    officeLED:zoneBrightness(2, hs.milight.minBrightness)
 end
 hs.hotkey.bind({}, 'f5', officeBrightnessDown, nil, officeBrightnessDown)
 hs.hotkey.bind({}, 'f6', officeBrightnessUp, nil, officeBrightnessUp)
 hs.hotkey.bind(hyper, 'f5', function() brightness = officeLED:zoneBrightness(0, hs.milight.minBrightness) end)
-hs.hotkey.bind(hyper, 'f6', function() brightness = officeLED:zoneBrightness(0, hs.milight.maxBrightness) end)
+hs.hotkey.bind(hyper, 'f6', function()
+    brightness = officeLED:zoneBrightness(1, hs.milight.maxBrightness)
+    officeLED:zoneBrightness(2, hs.milight.minBrightness)
+end)
 
 -- Misc hotkeys
 hs.hotkey.bind(hyper, 'y', hs.toggleConsole)
@@ -610,6 +624,9 @@ wifiWatcher:start()
 if (hostname == "pixukipa") then
     usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
     usbWatcher:start()
+
+    caffeinateWatcher = hs.caffeinate.watcher.new(caffeinateCallback)
+    caffeinateWatcher:start()
 end
 
 -- Render our statuslets, trigger a timer to update them regularly, and do an initial update
