@@ -120,7 +120,7 @@ function toggle_audio_output()
     local headphones = hs.audiodevice.findOutputByName(headphoneDevice)
 
     if not speakers or not headphones then
-        hs.notify.new({title="Hammerspoon", informativeText="ERROR: Some audio devices missing", ""}):send():release()
+        hs.notify.new({title="Hammerspoon", informativeText="ERROR: Some audio devices missing", ""}):send()
         return
     end
 
@@ -132,7 +132,7 @@ function toggle_audio_output()
     hs.notify.new({
           title='Hammerspoon',
             informativeText='Default output device:'..hs.audiodevice.defaultOutputDevice():name()
-        }):send():release()
+        }):send()
 end
 
 -- Toggle Skype between muted/unmuted, whether it is focused or not
@@ -361,7 +361,7 @@ function home_arrived()
     hs.notify.new({
           title='Hammerspoon',
             informativeText='Unmuted volume, mounted volumes, disabled firewall'
-        }):send():release()
+        }):send()
 end
 
 -- Perform tasks to configure the system for any WiFi network other than my home
@@ -378,7 +378,7 @@ function home_departed()
     hs.notify.new({
           title='Hammerspoon',
             informativeText='Muted volume, unmounted volumes, enabled firewall'
-        }):send():release()
+        }):send()
 end
 
 function updateStatuslets()
@@ -559,7 +559,7 @@ end
 hs.notify.new({
       title='Hammerspoon',
         informativeText='Config loaded'
-    }):send():release()
+    }):send()
 
 -- This is some developer debugging stuff. It will cause Hammerspoon to crash if any Lua is being executed on the wrong thread. You probably don't want this in your config :)
 -- local function crashifnotmain(reason)
