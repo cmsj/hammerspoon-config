@@ -1,3 +1,6 @@
+-- Seed the RNG
+math.randomseed( os.time() )
+
 -- Capture the hostname, so we can make this config behave differently across my Macs
 hostname = hs.host.localizedName()
 
@@ -32,11 +35,11 @@ local display_monitor = "Thunderbolt Display"
 
 -- Define audio device names for headphone/speaker switching
 local headphoneDevice = "USB PnP Sound Device"
-local speakerDevice = "Audioengine 2+"
+local speakerDevice = "Audioengine 2+  "
 
 -- Define default brightness for MiLight extension
 local brightness = 13
-local officeLED = hs.milight.new("10.0.88.255")
+local officeLED = hs.milight.new("10.0.88.21")
 
 -- Defines for WiFi watcher
 local homeSSID = "chrul" -- My home WiFi SSID
@@ -61,7 +64,7 @@ local iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_laptop, nil, nil
 local internal_display = {
     {"IRC",               nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Reeder",            nil,          display_laptop, hs.layout.left30,    nil, nil},
-    {"Safari",            nil,          display_laptop, hs.layout.maximized, nil, nil},
+    {hs.application.applicationsForBundleID("com.apple.Safari")[1],            nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"OmniFocus",         nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Mail",              nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Microsoft Outlook", nil,          display_laptop, hs.layout.maximized, nil, nil},
@@ -327,8 +330,10 @@ end
 function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
         officeLED:zoneOff(2)
+        officeLED:zoneOff(2)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
         officeLED:zoneOn(2)
+        officeLED:zoneColor(2, math.random(0, 255))
         officeLED:zoneBrightness(2, hs.milight.minBrightness)
     end
 end
@@ -607,6 +612,13 @@ hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
 hs.hotkey.bind(hyper, 'm', toggleSkypeMute)
 hs.hotkey.bind(hyper, 'd', mouseHighlight)
 hs.hotkey.bind(hyper, 'u', typeCurrentSafariURL)
+hs.hotkey.bind(hyper, '0', function()
+    print(configFileWatcher)
+    print(wifiWatcher)
+    print(screenWatcher)
+    print(usbWatcher)
+    print(caffeinateWatcher)
+end)
 
 -- Type the current clipboard, to get around web forms that don't let you paste
 -- (Note: I have Fn-v mapped to F17 in Karabiner)
