@@ -48,6 +48,9 @@ local lastSSID = hs.wifi.currentNetwork()
 -- Defines for screen watcher
 local lastNumberOfScreens = #hs.screen.allScreens()
 
+-- Defines for caffeinate watcher
+local shouldUnmuteOnScreenWake = nil
+
 -- Defines for window grid
 hs.grid.GRIDWIDTH = 4
 hs.grid.GRIDHEIGHT = 4
@@ -331,10 +334,22 @@ function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
         officeLED:zoneOff(2)
         officeLED:zoneOff(2)
+
+        local output = hs.audiodevice.defaultOutputDevice()
+        if output:muted() then
+            shouldUnmuteOnScreenWake = false
+        else
+            shouldUnmuteOnScreenWake = true
+        end
+        output:setMuted(true)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
         officeLED:zoneOn(2)
         officeLED:zoneColor(2, math.random(0, 255))
         officeLED:zoneBrightness(2, hs.milight.minBrightness)
+
+        if shouldUnmuteOnScreenWake then
+            hs.audiodevice.defaultOutputDevice():setMuted(false)
+        end
     end
 end
 
