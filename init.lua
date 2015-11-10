@@ -369,7 +369,7 @@ function screensChangedCallback()
     lastNumberOfScreens = newNumberOfScreens
 
     renderStatuslets()
-    updateStatuslets()
+    triggerStatusletsUpdate()
 end
 
 -- Perform tasks to configure the system for my home WiFi network
@@ -378,7 +378,7 @@ function home_arrived()
 
     -- Note: sudo commands will need to have been pre-configured in /etc/sudoers, for passwordless access, e.g.:
     -- cmsj ALL=(root) NOPASSWD: /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall *
-    os.execute("sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall off")
+    hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "off"})
 
     -- Mount my mac mini's DAS
     hs.applescript.applescript([[
@@ -388,7 +388,7 @@ function home_arrived()
             end try
         end tell
     ]])
-    updateStatuslets()
+    triggerStatusletsUpdate()
     hs.notify.new({
           title='Hammerspoon',
             informativeText='Unmuted volume, mounted volumes, disabled firewall'
@@ -398,13 +398,13 @@ end
 -- Perform tasks to configure the system for any WiFi network other than my home
 function home_departed()
     hs.audiodevice.defaultOutputDevice():setVolume(0)
-    os.execute("sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall on")
+    hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "on"})
     hs.applescript.applescript([[
         tell application "Finder"
             eject "Data"
         end tell
     ]])
-    updateStatuslets()
+    triggerStatusletsUpdate()
 
     hs.notify.new({
           title='Hammerspoon',
@@ -412,32 +412,50 @@ function home_departed()
         }):send()
 end
 
-function updateStatuslets()
+function statusletCallbackFirewall(code, stdout, stderr)
+    local color
+
+    if string.find(stdout, "block all non-essential") then
+        color = hs.drawing.color.osx_green
+    else
+        color = hs.drawing.color.osx_red
+    end
+
+    firewallStatusDot:setFillColor(color)
+end
+
+function statusletCallbackCCC(code, stdout, stderr)
+    local color
+
+    if code == 0 then
+        color = hs.drawing.color.osx_green
+    else
+        color = hs.drawing.color.osx_red
+    end
+
+    cccStatusDot:setFillColor(color)
+end
+
+function statusletCallbackArq(code, stdout, stderr)
+    local color
+
+    if code == 0 then
+        color = hs.drawing.color.osx_green
+    else
+        color = hs.drawing.color.osx_red
+    end
+
+    arqStatusDot:setFillColor(color)
+end
+
+function triggerStatusletsUpdate()
     if (hostname ~= "pixukipa") then
         return
     end
-    print("updateStatuslets")
-    _,_,fwcode = os.execute('sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getblockall | grep "block all non-essential"')
-    _,_,ccccode = os.execute('grep -q "$(date +%d/%m/%Y)" ~/.cccLast')
-    _,_,arqcode = os.execute('grep -q "Arq.*finished backup" /var/log/system.log')
-
-    if fwcode == 0 then
-        firewallStatusDot:setFillColor(hs.drawing.color.osx_green)
-    else
-        firewallStatusDot:setFillColor(hs.drawing.color.osx_red)
-    end
-
-    if ccccode == 0 then
-        cccStatusDot:setFillColor(hs.drawing.color.osx_green)
-    else
-        cccStatusDot:setFillColor(hs.drawing.color.osx_red)
-    end
-
-    if arqcode == 0 then
-        arqStatusDot:setFillColor(hs.drawing.color.osx_green)
-    else
-        arqStatusDot:setFillColor(hs.drawing.color.osx_red)
-    end
+    print("triggerStatusletsUpdate")
+    hs.task.new("/usr/bin/sudo", statusletCallbackFirewall, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--getblockall"}):start()
+    hs.task.new("/usr/bin/grep", statusletCallbackCCC, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.cccLast"}):start()
+    hs.task.new("/usr/bin/grep", statusletCallbackArq, {"-q", "Arq.*finished backup", "/var/log/system.log"}):start()
 end
 
 -- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
@@ -621,7 +639,7 @@ end)
 
 -- Misc hotkeys
 hs.hotkey.bind(hyper, 'y', hs.toggleConsole)
-hs.hotkey.bind(hyper, 'n', function() os.execute("open ~") end)
+hs.hotkey.bind(hyper, 'n', function() hs.task.new("/usr/bin/open", nil, {os.getenv("HOME")}):start() end)
 hs.hotkey.bind(hyper, 'c', caffeineClicked)
 hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
 hs.hotkey.bind(hyper, 'm', toggleSkypeMute)
@@ -658,9 +676,9 @@ end
 
 -- Render our statuslets, trigger a timer to update them regularly, and do an initial update
 renderStatuslets()
-statusletTimer = hs.timer.new(hs.timer.minutes(5), updateStatuslets)
+statusletTimer = hs.timer.new(hs.timer.minutes(5), triggerStatusletsUpdate)
 statusletTimer:start()
-updateStatuslets()
+triggerStatusletsUpdate()
 
 configFileWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig)
 configFileWatcher:start()
