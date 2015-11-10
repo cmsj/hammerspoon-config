@@ -67,7 +67,7 @@ local iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_laptop, nil, nil
 local internal_display = {
     {"IRC",               nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Reeder",            nil,          display_laptop, hs.layout.left30,    nil, nil},
-    {hs.application.applicationsForBundleID("com.apple.Safari")[1],            nil,          display_laptop, hs.layout.maximized, nil, nil},
+    {"Safari",            nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"OmniFocus",         nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Mail",              nil,          display_laptop, hs.layout.maximized, nil, nil},
     {"Microsoft Outlook", nil,          display_laptop, hs.layout.maximized, nil, nil},
@@ -81,20 +81,20 @@ local internal_display = {
 }
 
 local dual_display = {
-    {"IRC",               nil,          display_laptop,  hs.layout.maximized, nil, nil},
+    {"IRC",               nil,          display_laptop,  hs.layout.left50,    nil, nil},
     {"Reeder",            nil,          display_monitor, hs.layout.right50,   nil, nil},
     {"Safari",            nil,          display_monitor, hs.layout.left50,    nil, nil},
     {"OmniFocus",         nil,          display_monitor, hs.layout.right50,   nil, nil},
-    {"Mail",              nil,          display_laptop,  hs.layout.maximized, nil, nil},
-    {"Microsoft Outlook", nil,          display_monitor, hs.layout.maximized, nil, nil},
-    {"HipChat",           nil,          display_monitor, hs.layout.right50,   nil, nil},
+    {"Mail",              nil,          display_monitor, hs.layout.right50,   nil, nil},
+    {"Microsoft Outlook", nil,          display_monitor, hs.layout.left50,    nil, nil},
+    {"HipChat",           nil,          display_laptop,  hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
     {"1Password",         nil,          display_monitor, hs.layout.right50,   nil, nil},
     {"Calendar",          nil,          display_monitor, hs.layout.maximized, nil, nil},
-    {"Messages",          nil,          display_laptop,  hs.layout.maximized, nil, nil},
-    {"Evernote",          nil,          display_monitor, hs.layout.right50,   nil, nil},
+    {"Messages",          nil,          display_laptop,  hs.geometry.unitrect(0.5, 0, 0.5, 0.5), nil, nil},
     {"iTunes",            "iTunes",     display_laptop,  hs.layout.maximized, nil, nil},
     iTunesMiniPlayerLayout,
-    {"iTerm",             nil,          display_monitor, hs.layout.right50,   nil, nil},
+    {"iTerm",             nil,          display_monitor, hs.layout.maximized, nil, nil},
+    {"Photos",            nil,          display_monitor, hs.layout.maximized, nil, nil},
 }
 
 -- Helper functions
