@@ -1,5 +1,5 @@
 -- Seed the RNG
-math.randomseed( os.time() )
+math.randomseed(os.time())
 
 -- Capture the hostname, so we can make this config behave differently across my Macs
 hostname = hs.host.localizedName()
