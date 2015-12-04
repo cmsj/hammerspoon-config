@@ -708,3 +708,7 @@ hs.notify.new({
 --   end
 -- end
 -- debug.sethook(crashifnotmain, 'c')
+
+collectgarbage("setstepmul", 1000)
+collectgarbage("setpause", 1)
+
