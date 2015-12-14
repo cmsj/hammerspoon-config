@@ -335,6 +335,9 @@ function caffeinateCallback(eventType)
         officeLED:zoneOff(2)
         officeLED:zoneOff(2)
 
+        if hs.itunes.isPlaying() then
+            hs.itunes.pause()
+        end
         local output = hs.audiodevice.defaultOutputDevice()
         if output:muted() then
             shouldUnmuteOnScreenWake = false
