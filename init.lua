@@ -249,13 +249,13 @@ function renderStatuslets()
                                                       statusDotWidth))
 
     -- Finally, configure the rendering style of the text/circle objects, clamp them to the desktop, and show them
-    firewallStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show()
-    cccStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show()
-    arqStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show()
+    firewallStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
+    cccStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
+    arqStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
 
-    firewallStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
-    cccStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
-    arqStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show()
+    firewallStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
+    cccStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
+    arqStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
 end
 
 
@@ -358,6 +358,7 @@ end
 
 -- Callback function for changes in screen layout
 function screensChangedCallback()
+    print("screensChangedCallback")
     newNumberOfScreens = #hs.screen.allScreens()
 
     -- FIXME: This is awful if we swap primary screen to the external display. all the windows swap around, pointlessly.
@@ -476,9 +477,12 @@ function mouseHighlight()
     mouseCircle:setFill(false)
     mouseCircle:setStrokeWidth(5)
     mouseCircle:bringToFront(true)
-    mouseCircle:show()
+    mouseCircle:show(0.5)
 
-    mouseCircleTimer = hs.timer.doAfter(3, function() mouseCircle:delete() end)
+    mouseCircleTimer = hs.timer.doAfter(3, function()
+        mouseCircle:hide(0.5)
+        hs.timer.doAfter(0.6, function() mouseCircle:delete() end)
+    end)
 end
 
 -- Rather than switch to Safari, copy the current URL, switch back to the previous app and paste,
@@ -500,75 +504,76 @@ end
 -- URL director
 -- This makes Hammerspoon take over as the default http/https handler
 -- Whenever a URL is opened, Hammerspoon will draw all of the app icons which can handle URLs and let the user choose where to direct the URL
-hs.urlevent.httpCallback = function(scheme, host, params, fullURL)
-    print("URL Director: "..fullURL)
-
-    local screen = hs.screen.mainScreen():frame()
-    local handlers = hs.urlevent.getAllHandlersForScheme(scheme)
-    local numHandlers = #handlers
-    local modalKeys = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
-                       "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
-                       "A", "S", "D", "F", "G", "H", "J", "K", "L",
-                       "Z", "X", "C", "V", "B", "N", "M"}
-
-    local boxBorder = 10
-    local iconSize = 96
-
-    if numHandlers > 0 then
-        local appIcons = {}
-        local appNames = {}
-        local modalDirector = hs.hotkey.modal.new()
-        local x = screen.x + (screen.w / 2) - (numHandlers * iconSize / 2)
-        local y = screen.y + (screen.h / 2) - (iconSize / 2)
-        local box = hs.drawing.rectangle(hs.geometry.rect(x - boxBorder, y - (boxBorder * 3), (numHandlers * iconSize) + (boxBorder * 2), iconSize + (boxBorder * 5)))
-        box:setFillColor({["red"]=0,["blue"]=0,["green"]=0,["alpha"]=0.5}):setFill(true):show()
-        local header = hs.drawing.text(hs.geometry.rect(x, y - (boxBorder * 2), (numHandlers * iconSize), boxBorder * 2), fullURL)
-        header:setTextStyle({["size"]=12,["color"]={["red"]=1,["blue"]=1,["green"]=1,["alpha"]=1},["alignment"]="center",["lineBreak"]="truncateMiddle"})
-        header:orderAbove(box)
-        header:show()
-
-        local exitDirector = function(bundleID, url)
-            if (bundleID and url) then
-                hs.urlevent.openURLWithBundle(url, bundleID)
-            end
-            for _,icon in pairs(appIcons) do
-                icon:delete()
-            end
-            for _,name in pairs(appNames) do
-                name:delete()
-            end
-            header:delete()
-            box:delete()
-            modalDirector:exit()
-        end
-
-        for num,handler in pairs(handlers) do
-            local appIcon = hs.drawing.appImage(hs.geometry.size(iconSize, iconSize), handler)
-            if appIcon then
-                local appName = hs.drawing.text(hs.geometry.size(iconSize, boxBorder), modalKeys[num].." "..hs.application.nameForBundleID(handler))
-
-                table.insert(appIcons, appIcon)
-                table.insert(appNames, appName)
-
-                appIcon:setTopLeft(hs.geometry.point(x + ((num - 1) * iconSize), y))
-                appIcon:setClickCallback(function() exitDirector(handler, fullURL) end)
-                appIcon:orderAbove(box)
-                appIcon:show()
-
-                appName:setTopLeft(hs.geometry.point(x + ((num - 1) * iconSize), y + iconSize))
-                appName:setTextStyle({["size"]=10,["color"]={["red"]=1,["blue"]=1,["green"]=1,["alpha"]=1},["alignment"]="center",["lineBreak"]="truncateMiddle"})
-                appName:orderAbove(box)
-                appName:show()
-
-                modalDirector:bind({}, modalKeys[num], function() exitDirector(handler, fullURL) end)
-            end
-        end
-
-        modalDirector:bind({}, "Escape", exitDirector)
-        modalDirector:enter()
-    end
-end
+--hs.urlevent.httpCallback = function(scheme, host, params, fullURL)
+--    print("URL Director: "..fullURL)
+--
+--    local screen = hs.screen.mainScreen():frame()
+--    local handlers = hs.urlevent.getAllHandlersForScheme(scheme)
+--    local numHandlers = #handlers
+--    local modalKeys = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+--                       "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
+--                       "A", "S", "D", "F", "G", "H", "J", "K", "L",
+--                       "Z", "X", "C", "V", "B", "N", "M"}
+--
+--    local boxBorder = 10
+--    local iconSize = 96
+--
+--    if numHandlers > 0 then
+--        local appIcons = {}
+--        local appNames = {}
+--        local modalDirector = hs.hotkey.modal.new()
+--        local x = screen.x + (screen.w / 2) - (numHandlers * iconSize / 2)
+--        local y = screen.y + (screen.h / 2) - (iconSize / 2)
+--        local box = hs.drawing.rectangle(hs.geometry.rect(x - boxBorder, y - (boxBorder * 3), (numHandlers * iconSize) + (boxBorder * 2), iconSize + (boxBorder * 5)))
+--        box:setFillColor({["red"]=0,["blue"]=0,["green"]=0,["alpha"]=0.5}):setFill(true):show()
+--        local header = hs.drawing.text(hs.geometry.rect(x, y - (boxBorder * 2), (numHandlers * iconSize), boxBorder * 2), fullURL)
+--        header:setTextStyle({["size"]=12,["color"]={["red"]=1,["blue"]=1,["green"]=1,["alpha"]=1},["alignment"]="center",["lineBreak"]="truncateMiddle"})
+--        header:orderAbove(box)
+--        header:show()
+--
+--        local exitDirector = function(bundleID, url)
+--            if (bundleID and url) then
+--                hs.urlevent.openURLWithBundle(url, bundleID)
+--            end
+--            for _,icon in pairs(appIcons) do
+--                icon:delete()
+--            end
+--            for _,name in pairs(appNames) do
+--                name:delete()
+--            end
+--            header:delete()
+--            box:delete()
+--            modalDirector:exit()
+--        end
+--
+--        for num,handler in pairs(handlers) do
+--            local appIcon = hs.drawing.appImage(hs.geometry.size(iconSize, iconSize), handler)
+--            if appIcon then
+--                local appName = hs.drawing.text(hs.geometry.size(iconSize, boxBorder), modalKeys[num].." "..hs.application.nameForBundleID(handler))
+--
+--                table.insert(appIcons, appIcon)
+--                table.insert(appNames, appName)
+--
+--                appIcon:setTopLeft(hs.geometry.point(x + ((num - 1) * iconSize), y))
+--                appIcon:setClickCallback(function() exitDirector(handler, fullURL) end)
+--                appIcon:orderAbove(box)
+--                appIcon:show()
+--
+--                appName:setTopLeft(hs.geometry.point(x + ((num - 1) * iconSize), y + iconSize))
+--                appName:setTextStyle({["size"]=10,["color"]={["red"]=1,["blue"]=1,["green"]=1,["alpha"]=1},["alignment"]="center",["lineBreak"]="truncateMiddle"})
+--                appName:orderAbove(box)
+--                appName:show()
+--
+--                modalDirector:bind({}, modalKeys[num], function() exitDirector(handler, fullURL) end)
+--            end
+--        end
+--
+--        modalDirector:bind({}, "Escape", exitDirector)
+--        modalDirector:enter()
+--    end
+--end
 --hs.urlevent.setDefaultHandler('http')
+--hs.urlevent.setRestoreHandler('http', 'com.apple.Safari')
 
 -- Reload config
 function reloadConfig(paths)
@@ -714,4 +719,7 @@ hs.notify.new({
 
 collectgarbage("setstepmul", 1000)
 collectgarbage("setpause", 1)
+
+--local wfRedshift=hs.window.filter.new({loginwindow={visible=true,allowRoles='*'}},'wf-redshift')
+--hs.redshift.start(2000,'20:00','7:00','3h',false,wfRedshift)
 
