@@ -13,6 +13,7 @@ local wifiWatcher = nil
 local screenWatcher = nil
 local usbWatcher = nil
 local caffeinateWatcher = nil
+local appWatcher = nil
 
 local mouseCircle = nil
 local mouseCircleTimer = nil
@@ -669,7 +670,7 @@ end)
 hs.urlevent.bind('fnv', function() hs.eventtap.keyStrokes(hs.pasteboard.getContents()) end)
 
 -- Create and start our callbacks
-hs.application.watcher.new(applicationWatcher):start()
+appWatcher = hs.application.watcher.new(applicationWatcher):start()
 
 screenWatcher = hs.screen.watcher.new(screensChangedCallback)
 screenWatcher:start()
