@@ -31,12 +31,12 @@ local arqStatusDot = nil
 local hyper = {"⌘", "⌥", "⌃", "⇧"}
 
 -- Define monitor names for layout purposes
-local display_laptop = "Color LCD"
+local display_imac = "iMac"
 local display_monitor = "Thunderbolt Display"
 
 -- Define audio device names for headphone/speaker switching
-local headphoneDevice = "USB PnP Sound Device"
-local speakerDevice = "Audioengine 2+  "
+local headphoneDevice = "Built-in Output"
+local speakerDevice = "Audioengine 2_  "
 
 -- Define default brightness for MiLight extension
 local brightness = 13
@@ -53,8 +53,8 @@ local lastNumberOfScreens = #hs.screen.allScreens()
 local shouldUnmuteOnScreenWake = nil
 
 -- Defines for window grid
-hs.grid.GRIDWIDTH = 4
-hs.grid.GRIDHEIGHT = 4
+hs.grid.GRIDWIDTH = 8
+hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
 hs.grid.MARGINY = 0
 
@@ -64,38 +64,33 @@ local frameCache = {}
 -- Define window layouts
 --   Format reminder:
 --     {"App name", "Window name", "Display Name", "unitrect", "framerect", "fullframerect"},
-local iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_laptop, nil, nil, hs.geometry.rect(0, -48, 400, 48)}
+local iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_imac, nil, nil, hs.geometry.rect(0, -48, 400, 48)}
 local internal_display = {
-    {"IRC",               nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"Reeder",            nil,          display_laptop, hs.layout.left30,    nil, nil},
-    {"Safari",            nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"OmniFocus",         nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"Mail",              nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"Microsoft Outlook", nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"HipChat",           nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"1Password",         nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"Calendar",          nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"Messages",          nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"Evernote",          nil,          display_laptop, hs.layout.maximized, nil, nil},
-    {"iTunes",            "iTunes",     display_laptop, hs.layout.maximized, nil, nil},
+    {"IRC",               nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Reeder",            nil,          display_imac, hs.layout.left30,    nil, nil},
+    {"Safari",            nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"OmniFocus",         nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Mail",              nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Microsoft Outlook", nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"HipChat",           nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"1Password",         nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Calendar",          nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Messages",          nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Evernote",          nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"iTunes",            "iTunes",     display_imac, hs.layout.maximized, nil, nil},
     iTunesMiniPlayerLayout,
 }
 
 local dual_display = {
-    {"IRC",               nil,          display_laptop,  hs.layout.left50,    nil, nil},
-    {"Reeder",            nil,          display_monitor, hs.layout.right50,   nil, nil},
-    {"Safari",            nil,          display_monitor, hs.layout.left50,    nil, nil},
-    {"OmniFocus",         nil,          display_monitor, hs.layout.right50,   nil, nil},
-    {"Mail",              nil,          display_monitor, hs.layout.right50,   nil, nil},
-    {"Microsoft Outlook", nil,          display_monitor, hs.layout.left50,    nil, nil},
-    {"HipChat",           nil,          display_laptop,  hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
-    {"1Password",         nil,          display_monitor, hs.layout.right50,   nil, nil},
-    {"Calendar",          nil,          display_monitor, hs.layout.maximized, nil, nil},
-    {"Messages",          nil,          display_laptop,  hs.geometry.unitrect(0.5, 0, 0.5, 0.5), nil, nil},
-    {"iTunes",            "iTunes",     display_laptop,  hs.layout.maximized, nil, nil},
-    iTunesMiniPlayerLayout,
-    {"iTerm",             nil,          display_monitor, hs.layout.maximized, nil, nil},
-    {"Photos",            nil,          display_monitor, hs.layout.maximized, nil, nil},
+    {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 3/8, 0.5), nil, nil},
+    {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.95),   nil, nil},
+    {"Safari",            nil,          display_imac,    hs.layout.right50,    nil, nil},
+    {"OmniFocus",         "HP",         display_monitor, hs.geometry.unitrect(3/8, 0, 3/8, 0.5),   nil, nil},
+    {"OmniFocus",         "Forecast",   display_monitor, hs.geometry.unitrect(3/8, 0.5, 3/8, 0.5),   nil, nil},
+    {"Mail",              nil,          display_imac,    hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
+    {"Microsoft Outlook", nil,          display_imac,    hs.geometry.unitrect(0, 0, 0.5, 0.5),    nil, nil},
+    {"HipChat",           nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
+    {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0.25, 3/8, 0.25), nil, nil},
 }
 
 -- Helper functions
