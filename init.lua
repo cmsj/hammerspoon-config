@@ -38,10 +38,6 @@ local display_monitor = "Thunderbolt Display"
 local headphoneDevice = "Built-in Output"
 local speakerDevice = "Audioengine 2_  "
 
--- Define default brightness for MiLight extension
-local brightness = 13
-local officeLED = hs.milight.new("10.0.88.21")
-
 -- Defines for WiFi watcher
 local homeSSID = "chrul" -- My home WiFi SSID
 local lastSSID = hs.wifi.currentNetwork()
@@ -328,9 +324,6 @@ end
 -- Callback function for caffeinate events
 function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
-        officeLED:zoneOff(2)
-        officeLED:zoneOff(2)
-
         if hs.itunes.isPlaying() then
             hs.itunes.pause()
         end
@@ -342,10 +335,6 @@ function caffeinateCallback(eventType)
         end
         output:setMuted(true)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
-        officeLED:zoneOn(2)
-        officeLED:zoneColor(2, math.random(0, 255))
-        officeLED:zoneBrightness(2, hs.milight.minBrightness)
-
         if shouldUnmuteOnScreenWake then
             hs.audiodevice.defaultOutputDevice():setMuted(false)
         end
@@ -621,25 +610,6 @@ hs.hotkey.bind(hyper, 'e', function() toggle_application("iTerm") end)
 hs.hotkey.bind(hyper, 'q', function() toggle_application("Safari") end)
 hs.hotkey.bind(hyper, 'z', function() toggle_application("Reeder") end)
 hs.hotkey.bind(hyper, 'w', function() toggle_application("IRC") end)
-
--- Hotkeys to control the lighting in my office
-local officeBrightnessDown = function()
-    brightness = brightness - 1
-    brightness = officeLED:zoneBrightness(1, brightness)
-    officeLED:zoneBrightness(2, hs.milight.minBrightness)
-end
-local officeBrightnessUp = function()
-    brightness = brightness + 1
-    brightness = officeLED:zoneBrightness(1, brightness)
-    officeLED:zoneBrightness(2, hs.milight.minBrightness)
-end
-hs.hotkey.bind({}, 'f5', officeBrightnessDown, nil, officeBrightnessDown)
-hs.hotkey.bind({}, 'f6', officeBrightnessUp, nil, officeBrightnessUp)
-hs.hotkey.bind(hyper, 'f5', function() brightness = officeLED:zoneBrightness(0, hs.milight.minBrightness) end)
-hs.hotkey.bind(hyper, 'f6', function()
-    brightness = officeLED:zoneBrightness(1, hs.milight.maxBrightness)
-    officeLED:zoneBrightness(2, hs.milight.minBrightness)
-end)
 
 -- Misc hotkeys
 hs.hotkey.bind(hyper, 'y', hs.toggleConsole)
