@@ -35,7 +35,7 @@ local display_imac = "iMac"
 local display_monitor = "Thunderbolt Display"
 
 -- Define audio device names for headphone/speaker switching
-local headphoneDevice = "Built-in Output"
+local headphoneDevice = "Turtle Beach USB Audio"
 local speakerDevice = "Audioengine 2_  "
 
 -- Defines for WiFi watcher
