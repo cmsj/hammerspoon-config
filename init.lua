@@ -80,13 +80,13 @@ local internal_display = {
 local dual_display = {
     {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 3/8, 0.5), nil, nil},
     {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.95),   nil, nil},
-    {"Safari",            nil,          display_imac,    hs.layout.right50,    nil, nil},
-    {"OmniFocus",         "HP",         display_monitor, hs.geometry.unitrect(3/8, 0, 3/8, 0.5),   nil, nil},
+    {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 6/8),    nil, nil},
+    {"OmniFocus",         "RedHat",     display_monitor, hs.geometry.unitrect(3/8, 0, 3/8, 0.5),   nil, nil},
     {"OmniFocus",         "Forecast",   display_monitor, hs.geometry.unitrect(3/8, 0.5, 3/8, 0.5),   nil, nil},
     {"Mail",              nil,          display_imac,    hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
     {"Microsoft Outlook", nil,          display_imac,    hs.geometry.unitrect(0, 0, 0.5, 0.5),    nil, nil},
     {"HipChat",           nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
-    {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0.25, 3/8, 0.25), nil, nil},
+    {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
 }
 
 -- Helper functions
