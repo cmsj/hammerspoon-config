@@ -606,7 +606,7 @@ hs.urlevent.bind('hypershiftup', function() hs.grid.resizeWindowShorter(hs.windo
 hs.urlevent.bind('hypershiftdown', function() hs.grid.resizeWindowTaller(hs.window.focusedWindow()) end)
 
 -- Application hotkeys
-hs.hotkey.bind(hyper, 'e', function() toggle_application("iTerm") end)
+hs.hotkey.bind(hyper, 'e', function() toggle_application("iTerm2") end)
 hs.hotkey.bind(hyper, 'q', function() toggle_application("Safari") end)
 hs.hotkey.bind(hyper, 'z', function() toggle_application("Reeder") end)
 hs.hotkey.bind(hyper, 'w', function() toggle_application("IRC") end)
