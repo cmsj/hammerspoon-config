@@ -26,6 +26,9 @@ cccStatusDot = nil
 arqStatusText = nil
 arqStatusDot = nil
 
+officeMotionWatcher = nil
+officeMotionWatcherID = nil
+
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
 hyper = {"⌘", "⌥", "⌃", "⇧"}
@@ -334,10 +337,12 @@ function caffeinateCallback(eventType)
             shouldUnmuteOnScreenWake = true
         end
         output:setMuted(true)
+        hs.timer.doAfter(10, function() officeMotionWatcher:start() end)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
         if shouldUnmuteOnScreenWake then
             hs.audiodevice.defaultOutputDevice():setMuted(false)
         end
+        officeMotionWatcher:stop()
     end
 end
 
@@ -363,7 +368,7 @@ end
 
 -- Perform tasks to configure the system for my home WiFi network
 function home_arrived()
-    hs.audiodevice.defaultOutputDevice():setVolume(25)
+--    hs.audiodevice.defaultOutputDevice():setVolume(25)
 
     -- Note: sudo commands will need to have been pre-configured in /etc/sudoers, for passwordless access, e.g.:
     -- cmsj ALL=(root) NOPASSWD: /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall *
@@ -665,6 +670,15 @@ if hs.wifi.currentNetwork() == "chrul" then
     home_arrived()
 else
     home_departed()
+end
+
+-- Start the office motion sensor
+officeMotionWatcher = require("hueMotionSensor")
+officeMotionWatcher.userCallback = function(presence)
+    if presence then
+        print("Motion detected in Office, declaring user activity")
+        officeMotionWatcherID = hs.caffeinate.declareUserActivity(officeMotionWatcherID)
+    end
 end
 
 -- Finally, show a notification that we finished loading the config successfully
