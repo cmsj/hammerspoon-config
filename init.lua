@@ -28,6 +28,7 @@ arqStatusDot = nil
 
 officeMotionWatcher = nil
 officeMotionWatcherID = nil
+officeMotionDoAfter = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
@@ -327,6 +328,10 @@ end
 -- Callback function for caffeinate events
 function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
+        officeMotionDoAfter = hs.timer.doAfter(10, function()
+            print("Starting officeMotionWatcher")
+            officeMotionWatcher:start()
+        end)
         if hs.itunes.isPlaying() then
             hs.itunes.pause()
         end
@@ -337,11 +342,11 @@ function caffeinateCallback(eventType)
             shouldUnmuteOnScreenWake = true
         end
         output:setMuted(true)
-        hs.timer.doAfter(10, function() officeMotionWatcher:start() end)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
         if shouldUnmuteOnScreenWake then
             hs.audiodevice.defaultOutputDevice():setMuted(false)
         end
+        print("Stopping officeMotionWatcher")
         officeMotionWatcher:stop()
     end
 end
