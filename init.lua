@@ -8,45 +8,45 @@ hostname = hs.host.localizedName()
 hs.ipc.cliInstall()
 
 -- Watchers and other useful objects
-local configFileWatcher = nil
-local wifiWatcher = nil
-local screenWatcher = nil
-local usbWatcher = nil
-local caffeinateWatcher = nil
-local appWatcher = nil
+configFileWatcher = nil
+wifiWatcher = nil
+screenWatcher = nil
+usbWatcher = nil
+caffeinateWatcher = nil
+appWatcher = nil
 
-local mouseCircle = nil
-local mouseCircleTimer = nil
+mouseCircle = nil
+mouseCircleTimer = nil
 
-local statusletTimer = nil
-local firewallStatusText = nil
-local firewallStatusDot = nil
-local cccStatusText = nil
-local cccStatusDot = nil
-local arqStatusText = nil
-local arqStatusDot = nil
+statusletTimer = nil
+firewallStatusText = nil
+firewallStatusDot = nil
+cccStatusText = nil
+cccStatusDot = nil
+arqStatusText = nil
+arqStatusDot = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
-local hyper = {"⌘", "⌥", "⌃", "⇧"}
+hyper = {"⌘", "⌥", "⌃", "⇧"}
 
 -- Define monitor names for layout purposes
-local display_imac = "iMac"
-local display_monitor = "Thunderbolt Display"
+display_imac = "iMac"
+display_monitor = "Thunderbolt Display"
 
 -- Define audio device names for headphone/speaker switching
-local headphoneDevice = "Turtle Beach USB Audio"
-local speakerDevice = "Audioengine 2_  "
+headphoneDevice = "Turtle Beach USB Audio"
+speakerDevice = "Audioengine 2_  "
 
 -- Defines for WiFi watcher
-local homeSSID = "chrul" -- My home WiFi SSID
-local lastSSID = hs.wifi.currentNetwork()
+homeSSID = "chrul" -- My home WiFi SSID
+lastSSID = hs.wifi.currentNetwork()
 
 -- Defines for screen watcher
-local lastNumberOfScreens = #hs.screen.allScreens()
+lastNumberOfScreens = #hs.screen.allScreens()
 
 -- Defines for caffeinate watcher
-local shouldUnmuteOnScreenWake = nil
+shouldUnmuteOnScreenWake = nil
 
 -- Defines for window grid
 hs.grid.GRIDWIDTH = 8
@@ -55,13 +55,13 @@ hs.grid.MARGINX = 0
 hs.grid.MARGINY = 0
 
 -- Defines for window maximize toggler
-local frameCache = {}
+frameCache = {}
 
 -- Define window layouts
 --   Format reminder:
 --     {"App name", "Window name", "Display Name", "unitrect", "framerect", "fullframerect"},
-local iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_imac, nil, nil, hs.geometry.rect(0, -48, 400, 48)}
-local internal_display = {
+iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_imac, nil, nil, hs.geometry.rect(0, -48, 400, 48)}
+internal_display = {
     {"IRC",               nil,          display_imac, hs.layout.maximized, nil, nil},
     {"Reeder",            nil,          display_imac, hs.layout.left30,    nil, nil},
     {"Safari",            nil,          display_imac, hs.layout.maximized, nil, nil},
@@ -77,7 +77,7 @@ local internal_display = {
     iTunesMiniPlayerLayout,
 }
 
-local dual_display = {
+dual_display = {
     {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 3/8, 0.5), nil, nil},
     {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.95),   nil, nil},
     {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 6/8),    nil, nil},
@@ -92,7 +92,7 @@ local dual_display = {
 -- Helper functions
 
 -- Replace Caffeine.app with 18 lines of Lua :D
-local caffeine = hs.menubar.new()
+caffeine = hs.menubar.new()
 
 function setCaffeineDisplay(state)
     local result
