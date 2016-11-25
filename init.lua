@@ -1,3 +1,14 @@
+--hs.crash.throwObjCException("lolception", "This was deliberate")
+-- Print out more logging for me to see
+hs.crash.crashLogToNSLog = true
+
+-- Trace all Lua code
+function lineTraceHook(event, data)
+    lineInfo = debug.getinfo(2, "Snl")
+    print("TRACE: "..(lineInfo["short_src"] or "<unknown source>")..":"..(lineInfo["linedefined"] or "<??>"))
+end
+-- debug.sethook(lineTraceHook, "l")
+
 -- Seed the RNG
 math.randomseed(os.time())
 
@@ -71,7 +82,7 @@ internal_display = {
     {"Safari",            nil,          display_imac, hs.layout.maximized, nil, nil},
     {"OmniFocus",         nil,          display_imac, hs.layout.maximized, nil, nil},
     {"Mail",              nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Microsoft Outlook", nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Airmail",           nil,          display_imac, hs.layout.maximized, nil, nil},
     {"HipChat",           nil,          display_imac, hs.layout.maximized, nil, nil},
     {"1Password",         nil,          display_imac, hs.layout.maximized, nil, nil},
     {"Calendar",          nil,          display_imac, hs.layout.maximized, nil, nil},
@@ -84,11 +95,12 @@ internal_display = {
 dual_display = {
     {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 3/8, 0.5), nil, nil},
     {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.95),   nil, nil},
-    {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 6/8),    nil, nil},
+    {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
+    {"Kiwi for Gmail",    nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
     {"OmniFocus",         "RedHat",     display_monitor, hs.geometry.unitrect(3/8, 0, 3/8, 0.5),   nil, nil},
     {"OmniFocus",         "Forecast",   display_monitor, hs.geometry.unitrect(3/8, 0.5, 3/8, 0.5),   nil, nil},
     {"Mail",              nil,          display_imac,    hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
-    {"Microsoft Outlook", nil,          display_imac,    hs.geometry.unitrect(0, 0, 0.5, 0.5),    nil, nil},
+    {"Airmail",           nil,          display_imac,    hs.geometry.unitrect(0, 0, 0.5, 0.5),    nil, nil},
     {"HipChat",           nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
     {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
 }
