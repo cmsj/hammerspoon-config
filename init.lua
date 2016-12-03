@@ -41,6 +41,9 @@ officeMotionWatcher = nil
 officeMotionWatcherID = nil
 officeMotionDoAfter = nil
 
+reachabilityMenuItem = nil
+reachabilityWatcher = nil
+
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
 hyper = {"⌘", "⌥", "⌃", "⇧"}
@@ -477,6 +480,20 @@ function triggerStatusletsUpdate()
     hs.task.new("/usr/bin/grep", statusletCallbackCCC, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.cccLast"}):start()
     hs.task.new("/usr/bin/grep", statusletCallbackArq, {"-q", "Arq.*finished backup", "/var/log/system.log"}):start()
 end
+
+-- Display a menubar item to indicate if the Internet is reachable
+reachabilityMenuItem = hs.menubar.new():setTitle("?")
+reachabilityCallback = function(self, flags)
+     if (flags & hs.network.reachability.flags.reachable) > 0 then
+         -- Internet is reachable
+         reachabilityMenuItem:setTitle("☁️")
+     else
+         -- Interner is not reachable
+         reachabilityMenuItem:setTitle("🌪")
+     end
+end
+reachabilityWatcher = hs.network.reachability.forAddress("8.8.8.8"):setCallback(reachabilityCallback):start()
+reachabilityCallback(reachabilityWatcher, reachabilityWatcher:status())
 
 -- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
 -- This draws a bright red circle around the pointer for a few seconds
