@@ -1,3 +1,14 @@
+--hs.crash.throwObjCException("lolception", "This was deliberate")
+-- Print out more logging for me to see
+hs.crash.crashLogToNSLog = true
+
+-- Trace all Lua code
+function lineTraceHook(event, data)
+    lineInfo = debug.getinfo(2, "Snl")
+    print("TRACE: "..(lineInfo["short_src"] or "<unknown source>")..":"..(lineInfo["linedefined"] or "<??>"))
+end
+-- debug.sethook(lineTraceHook, "l")
+
 -- Seed the RNG
 math.randomseed(os.time())
 
@@ -25,6 +36,10 @@ cccStatusText = nil
 cccStatusDot = nil
 arqStatusText = nil
 arqStatusDot = nil
+
+officeMotionWatcher = nil
+officeMotionWatcherID = nil
+officeMotionDoAfter = nil
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
@@ -72,7 +87,7 @@ internal_display = {
     {"Safari",            nil,          display_imac, hs.layout.maximized, nil, nil},
     {"OmniFocus",         nil,          display_imac, hs.layout.maximized, nil, nil},
     {"Mail",              nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Microsoft Outlook", nil,          display_imac, hs.layout.maximized, nil, nil},
+    {"Airmail",           nil,          display_imac, hs.layout.maximized, nil, nil},
     {"HipChat",           nil,          display_imac, hs.layout.maximized, nil, nil},
     {"1Password",         nil,          display_imac, hs.layout.maximized, nil, nil},
     {"Calendar",          nil,          display_imac, hs.layout.maximized, nil, nil},
@@ -85,11 +100,12 @@ internal_display = {
 dual_display = {
     {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 3/8, 0.5), nil, nil},
     {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.95),   nil, nil},
-    {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 6/8),    nil, nil},
+    {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
+    {"Kiwi for Gmail",    nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
     {"OmniFocus",         "RedHat",     display_monitor, hs.geometry.unitrect(3/8, 0, 3/8, 0.5),   nil, nil},
     {"OmniFocus",         "Forecast",   display_monitor, hs.geometry.unitrect(3/8, 0.5, 3/8, 0.5),   nil, nil},
     {"Mail",              nil,          display_imac,    hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
-    {"Microsoft Outlook", nil,          display_imac,    hs.geometry.unitrect(0, 0, 0.5, 0.5),    nil, nil},
+    {"Airmail",           nil,          display_imac,    hs.geometry.unitrect(0, 0, 0.5, 0.5),    nil, nil},
     {"HipChat",           nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
     {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
 }
@@ -329,6 +345,12 @@ end
 -- Callback function for caffeinate events
 function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
+        if (hostname == pixukipa) then
+            officeMotionDoAfter = hs.timer.doAfter(10, function()
+                print("Starting officeMotionWatcher")
+                officeMotionWatcher:start()
+            end)
+        end
         if hs.itunes.isPlaying() then
             hs.itunes.pause()
         end
@@ -342,6 +364,10 @@ function caffeinateCallback(eventType)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
         if shouldUnmuteOnScreenWake then
             hs.audiodevice.defaultOutputDevice():setMuted(false)
+        end
+        if (hostname == "pixukipa") then
+            print("Stopping officeMotionWatcher")
+            officeMotionWatcher:stop()
         end
     end
 end
@@ -368,7 +394,7 @@ end
 
 -- Perform tasks to configure the system for my home WiFi network
 function home_arrived()
-    hs.audiodevice.defaultOutputDevice():setVolume(25)
+--    hs.audiodevice.defaultOutputDevice():setVolume(25)
 
     -- Note: sudo commands will need to have been pre-configured in /etc/sudoers, for passwordless access, e.g.:
     -- cmsj ALL=(root) NOPASSWD: /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall *
@@ -671,6 +697,17 @@ if hs.wifi.currentNetwork() == "chrul" then
     home_arrived()
 else
     home_departed()
+end
+
+-- Start the office motion sensor
+if (hostname == "pixukipa") then
+    officeMotionWatcher = require("hueMotionSensor")
+    officeMotionWatcher.userCallback = function(presence)
+        if presence then
+            print("Motion detected in Office, declaring user activity")
+            officeMotionWatcherID = hs.caffeinate.declareUserActivity(officeMotionWatcherID)
+        end
+    end
 end
 
 -- Finally, show a notification that we finished loading the config successfully
