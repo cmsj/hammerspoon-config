@@ -1,6 +1,6 @@
 -- This is a bunch of code to use a Philips Hue Motion Sensor as a trigger for doing work
 
-hueBridge = {}
+local hueBridge = {}
 
 hueBridge.ip = nil
 hueBridge.username = hs.settings.get("hueBridgeUsername") -- This will store the username the Hue bridge gave us

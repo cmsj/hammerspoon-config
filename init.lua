@@ -7,7 +7,7 @@ function lineTraceHook(event, data)
     lineInfo = debug.getinfo(2, "Snl")
     print("TRACE: "..(lineInfo["short_src"] or "<unknown source>")..":"..(lineInfo["linedefined"] or "<??>"))
 end
--- debug.sethook(lineTraceHook, "l")
+--debug.sethook(lineTraceHook, "l")
 
 -- Seed the RNG
 math.randomseed(os.time())
@@ -26,23 +26,29 @@ usbWatcher = nil
 caffeinateWatcher = nil
 appWatcher = nil
 
-mouseCircle = nil
-mouseCircleTimer = nil
+-- Load various modules from ~/.hammerspoon/ depending on which machine this is
 
-statusletTimer = nil
-firewallStatusText = nil
-firewallStatusDot = nil
-cccStatusText = nil
-cccStatusDot = nil
-arqStatusText = nil
-arqStatusDot = nil
+-- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
+-- This draws a bright red circle around the pointer for a few seconds
+mouseCircle = require("mouseCircle"):start()
 
-officeMotionWatcher = nil
-officeMotionWatcherID = nil
-officeMotionDoAfter = nil
+-- Replace Caffeine.app with 18 lines of Lua :D
+caffeine = require("caffeine"):start()
 
-reachabilityMenuItem = nil
-reachabilityWatcher = nil
+if (hostname == "pixukipa") then
+    -- I like to have some little traffic light coloured dots in the bottom right corner of my screen
+    -- to show various status items. Like Geeklet
+    statuslets = require("statuslets"):start()
+
+    -- If the Philips Hue Motion Sensor in my office detects movement, make sure my iMac screens are awake
+    officeMotionWatcher = require("officeMotion")
+else
+    statuslets = nil
+    officeMotionWatcher = nil
+
+    -- Display a menubar item to indicate if the Internet is reachable
+    reachabilityMenuItem = require("reachabilityMenuItem"):start()
+end
 
 -- Define some keyboard modifier variables
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
@@ -83,7 +89,6 @@ frameCache = {}
 -- Define window layouts
 --   Format reminder:
 --     {"App name", "Window name", "Display Name", "unitrect", "framerect", "fullframerect"},
-iTunesMiniPlayerLayout = {"iTunes", "MiniPlayer", display_imac, nil, nil, hs.geometry.rect(0, -48, 400, 48)}
 internal_display = {
     {"IRC",               nil,          display_imac, hs.layout.maximized, nil, nil},
     {"Reeder",            nil,          display_imac, hs.layout.left30,    nil, nil},
@@ -97,7 +102,6 @@ internal_display = {
     {"Messages",          nil,          display_imac, hs.layout.maximized, nil, nil},
     {"Evernote",          nil,          display_imac, hs.layout.maximized, nil, nil},
     {"iTunes",            "iTunes",     display_imac, hs.layout.maximized, nil, nil},
-    iTunesMiniPlayerLayout,
 }
 
 dual_display = {
@@ -114,27 +118,6 @@ dual_display = {
 }
 
 -- Helper functions
-
--- Replace Caffeine.app with 18 lines of Lua :D
-caffeine = hs.menubar.new()
-
-function setCaffeineDisplay(state)
-    local result
-    if state then
-        result = caffeine:setIcon("caffeine-on.pdf")
-    else
-        result = caffeine:setIcon("caffeine-off.pdf")
-    end
-end
-
-function caffeineClicked()
-    setCaffeineDisplay(hs.caffeinate.toggle("displayIdle"))
-end
-
-if caffeine then
-    caffeine:setClickCallback(caffeineClicked)
-    setCaffeineDisplay(hs.caffeinate.get("displayIdle"))
-end
 
 -- Toggle between speaker and headphone sound devices (useful if you have multiple USB soundcards that are always connected)
 function toggle_audio_output()
@@ -156,28 +139,6 @@ function toggle_audio_output()
           title='Hammerspoon',
             informativeText='Default output device:'..hs.audiodevice.defaultOutputDevice():name()
         }):send()
-end
-
--- Toggle Skype between muted/unmuted, whether it is focused or not
-function toggleSkypeMute()
-    local skype = hs.appfinder.appFromName("Skype")
-    if not skype then
-        return
-    end
-
-    local lastapp = nil
-    if not skype:isFrontmost() then
-        lastapp = hs.application.frontmostApplication()
-        skype:activate()
-    end
-
-    if not skype:selectMenuItem({"Conversations", "Mute Microphone"}) then
-        skype:selectMenuItem({"Conversations", "Unmute Microphone"})
-    end
-
-    if lastapp then
-        lastapp:activate()
-    end
 end
 
 -- Toggle an application between being the frontmost app, and being hidden
@@ -211,106 +172,12 @@ function toggle_window_maximized()
     end
 end
 
--- Draw little text/dot pairs in the bottom right corner of the primary display, to indicate firewall/backup status of my machine
-function renderStatuslets()
-    if (hostname ~= "pixukipa") then
-        return
-    end
-    -- Destroy existing Statuslets
-    if firewallStatusText then firewallStatusText:delete() end
-    if firewallStatusDot then firewallStatusDot:delete() end
-    if cccStatusText then cccStatusText:delete() end
-    if cccStatusDot then cccStatusDot:delete() end
-    if arqStatusText then arqStatusText:delete() end
-    if arqStatusDot then arqStatusDot:delete() end
-
-    -- Defines for statuslets - little coloured dots in the corner of my screen that give me status info, see:
-    -- https://www.dropbox.com/s/3v2vyhi1beyujtj/Screenshot%202015-03-11%2016.13.25.png?dl=0
-    local initialScreenFrame = hs.screen.allScreens()[1]:fullFrame()
-
-    -- Start off by declaring the size of the text/circle objects and some anchor positions for them on screen
-    local statusDotWidth = 10
-    local statusTextWidth = 30
-    local statusTextHeight = 15
-    local statusText_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth - statusTextWidth
-    local statusText_y = initialScreenFrame.y + initialScreenFrame.h - statusTextHeight
-    local statusDot_x = initialScreenFrame.x + initialScreenFrame.w - statusDotWidth
-    local statusDot_y = statusText_y
-
-    -- Now create the text/circle objects using the sizes/positions we just declared (plus a little fudging to make it all align properly)
-    firewallStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 5,
-                                                          statusText_y - (statusTextHeight*2) + 2,
-                                                          statusTextWidth,
-                                                          statusTextHeight), "FW:")
-    cccStatusText = hs.drawing.text(hs.geometry.rect(statusText_x,
-                                                     statusText_y - statusTextHeight + 1,
-                                                     statusTextWidth,
-                                                     statusTextHeight), "CCC:")
-    arqStatusText = hs.drawing.text(hs.geometry.rect(statusText_x + 4,
-                                                     statusText_y,
-                                                     statusTextWidth,
-                                                     statusTextHeight), "Arq:")
-
-    firewallStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                           statusDot_y - (statusTextHeight*2) + 4,
-                                                           statusDotWidth,
-                                                           statusDotWidth))
-    cccStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                      statusDot_y - statusTextHeight + 3,
-                                                      statusDotWidth,
-                                                      statusDotWidth))
-    arqStatusDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                      statusDot_y + 2,
-                                                      statusDotWidth,
-                                                      statusDotWidth))
-
-    -- Finally, configure the rendering style of the text/circle objects, clamp them to the desktop, and show them
-    firewallStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
-    cccStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
-    arqStatusText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
-
-    firewallStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
-    cccStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
-    arqStatusDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
-end
-
-
 -- Callback function for application events
 function applicationWatcher(appName, eventType, appObject)
     if (eventType == hs.application.watcher.activated) then
         if (appName == "Finder") then
             -- Bring all Finder windows forward when one gets activated
             appObject:selectMenuItem({"Window", "Bring All to Front"})
-        elseif (appName == "iTunes") then
-            -- Ensure the MiniPlayer window is visible and correctly placed, since it likes to hide an awful lot
-            state = appObject:findMenuItem({"Window", "MiniPlayer"})
-            if state and not state["ticked"] then
-                appObject:selectMenuItem({"Window", "MiniPlayer"})
-            end
-            _animationDuration = hs.window.animationDuration
-            hs.window.animationDuration = 0
-            hs.layout.apply({ iTunesMiniPlayerLayout })
-            hs.window.animationDuration = _animationDuration
-        end
-    elseif (eventType == hs.application.watcher.launching) then
-        if (appName == "Call of Duty: Modern Warfare 3") then
-            print("CoD Starting")
-            hs.itunes.pause()
-            local tbDisplay = hs.screen.findByName("Thunderbolt Display")
-            if (tbDisplay) then
-                tbDisplay:setPrimary()
-            end
-        end
-    elseif (eventType == hs.application.watcher.terminated) then
-        if (appName == "Call of Duty: Modern Warfare 3") then
-            print("CoD Stopping")
-            local mbDisplay = hs.screen.findByName("Color LCD")
-            if (mbDisplay) then
-                mbDisplay:setPrimary()
-            end
-            if hs.screen.findByName("Thunderbolt Display") then
-                hs.layout.apply(dual_display)
-            end
         end
     end
 end
@@ -348,29 +215,24 @@ end
 -- Callback function for caffeinate events
 function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
-        if (hostname == pixukipa) then
-            officeMotionDoAfter = hs.timer.doAfter(10, function()
-                print("Starting officeMotionWatcher")
-                officeMotionWatcher:start()
-            end)
+        if officeMotion then
+            officeMotion:start()
         end
+
         if hs.itunes.isPlaying() then
             hs.itunes.pause()
         end
+
         local output = hs.audiodevice.defaultOutputDevice()
-        if output:muted() then
-            shouldUnmuteOnScreenWake = false
-        else
-            shouldUnmuteOnScreenWake = true
-        end
+        shouldUnmuteOnScreenWake = not output:muted()
         output:setMuted(true)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
         if shouldUnmuteOnScreenWake then
             hs.audiodevice.defaultOutputDevice():setMuted(false)
         end
-        if (hostname == "pixukipa") then
-            print("Stopping officeMotionWatcher")
-            officeMotionWatcher:stop()
+
+        if officeMotion then
+            officeMotion:stop()
         end
     end
 end
@@ -391,14 +253,14 @@ function screensChangedCallback()
 
     lastNumberOfScreens = newNumberOfScreens
 
-    renderStatuslets()
-    triggerStatusletsUpdate()
+    if statuslets then
+        statuslets:render()
+        statuslets:update()
+    end
 end
 
 -- Perform tasks to configure the system for my home WiFi network
 function home_arrived()
---    hs.audiodevice.defaultOutputDevice():setVolume(25)
-
     -- Note: sudo commands will need to have been pre-configured in /etc/sudoers, for passwordless access, e.g.:
     -- cmsj ALL=(root) NOPASSWD: /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall *
     hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "off"})
@@ -411,111 +273,31 @@ function home_arrived()
             end try
         end tell
     ]])
-    triggerStatusletsUpdate()
+    if statuslets then
+        statuslets:update()
+    end
     hs.notify.new({
           title='Hammerspoon',
-            informativeText='Unmuted volume, mounted volumes, disabled firewall'
+            informativeText='Mounted volumes, disabled firewall'
         }):send()
 end
 
 -- Perform tasks to configure the system for any WiFi network other than my home
 function home_departed()
-    hs.audiodevice.defaultOutputDevice():setVolume(0)
     hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "on"})
     hs.applescript.applescript([[
         tell application "Finder"
             eject "Data"
         end tell
     ]])
-    triggerStatusletsUpdate()
+    if statuslets then
+        statuslets:update()
+    end
 
     hs.notify.new({
           title='Hammerspoon',
-            informativeText='Muted volume, unmounted volumes, enabled firewall'
+            informativeText='Unmounted volumes, enabled firewall'
         }):send()
-end
-
-function statusletCallbackFirewall(code, stdout, stderr)
-    local color
-
-    if string.find(stdout, "block all non-essential") then
-        color = hs.drawing.color.osx_green
-    else
-        color = hs.drawing.color.osx_red
-    end
-
-    firewallStatusDot:setFillColor(color)
-end
-
-function statusletCallbackCCC(code, stdout, stderr)
-    local color
-
-    if code == 0 then
-        color = hs.drawing.color.osx_green
-    else
-        color = hs.drawing.color.osx_red
-    end
-
-    cccStatusDot:setFillColor(color)
-end
-
-function statusletCallbackArq(code, stdout, stderr)
-    local color
-
-    if code == 0 then
-        color = hs.drawing.color.osx_green
-    else
-        color = hs.drawing.color.osx_red
-    end
-
-    arqStatusDot:setFillColor(color)
-end
-
-function triggerStatusletsUpdate()
-    if (hostname ~= "pixukipa") then
-        return
-    end
-    print("triggerStatusletsUpdate")
-    hs.task.new("/usr/bin/sudo", statusletCallbackFirewall, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--getblockall"}):start()
-    hs.task.new("/usr/bin/grep", statusletCallbackCCC, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.cccLast"}):start()
-    hs.task.new("/usr/bin/grep", statusletCallbackArq, {"-q", "Arq.*finished backup", "/var/log/system.log"}):start()
-end
-
--- Display a menubar item to indicate if the Internet is reachable
-reachabilityMenuItem = hs.menubar.new():setTitle("?")
-reachabilityCallback = function(self, flags)
-     if (flags & hs.network.reachability.flags.reachable) > 0 then
-         -- Internet is reachable
-         reachabilityMenuItem:setTitle("☁️")
-     else
-         -- Interner is not reachable
-         reachabilityMenuItem:setTitle("🌪")
-     end
-end
-reachabilityWatcher = hs.network.reachability.forAddress("8.8.8.8"):setCallback(reachabilityCallback):start()
-reachabilityCallback(reachabilityWatcher, reachabilityWatcher:status())
-
--- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
--- This draws a bright red circle around the pointer for a few seconds
-function mouseHighlight()
-    if mouseCircle then
-        mouseCircle:delete()
-        if mouseCircleTimer then
-            mouseCircleTimer:stop()
-        end
-    end
-    mousepoint = hs.mouse.getAbsolutePosition()
-    mouseCircle = hs.drawing.circle(hs.geometry.rect(mousepoint.x-40, mousepoint.y-40, 80, 80))
-    mouseCircle:setStrokeColor({["red"]=1,["blue"]=0,["green"]=0,["alpha"]=1})
-    mouseCircle:setFill(false)
-    mouseCircle:setStrokeWidth(5)
-    mouseCircle:bringToFront(true)
-    mouseCircle:show(0.5)
-
-    mouseCircleTimer = hs.timer.doAfter(3, function()
-        mouseCircle:hide(0.5)
-        hs.timer.doAfter(0.6, function() mouseCircle:delete() end)
-    end)
 end
 
 -- Rather than switch to Safari, copy the current URL, switch back to the previous app and paste,
@@ -534,80 +316,6 @@ function typeCurrentSafariURL()
     end
 end
 
--- URL director
--- This makes Hammerspoon take over as the default http/https handler
--- Whenever a URL is opened, Hammerspoon will draw all of the app icons which can handle URLs and let the user choose where to direct the URL
---hs.urlevent.httpCallback = function(scheme, host, params, fullURL)
---    print("URL Director: "..fullURL)
---
---    local screen = hs.screen.mainScreen():frame()
---    local handlers = hs.urlevent.getAllHandlersForScheme(scheme)
---    local numHandlers = #handlers
---    local modalKeys = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
---                       "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
---                       "A", "S", "D", "F", "G", "H", "J", "K", "L",
---                       "Z", "X", "C", "V", "B", "N", "M"}
---
---    local boxBorder = 10
---    local iconSize = 96
---
---    if numHandlers > 0 then
---        local appIcons = {}
---        local appNames = {}
---        local modalDirector = hs.hotkey.modal.new()
---        local x = screen.x + (screen.w / 2) - (numHandlers * iconSize / 2)
---        local y = screen.y + (screen.h / 2) - (iconSize / 2)
---        local box = hs.drawing.rectangle(hs.geometry.rect(x - boxBorder, y - (boxBorder * 3), (numHandlers * iconSize) + (boxBorder * 2), iconSize + (boxBorder * 5)))
---        box:setFillColor({["red"]=0,["blue"]=0,["green"]=0,["alpha"]=0.5}):setFill(true):show()
---        local header = hs.drawing.text(hs.geometry.rect(x, y - (boxBorder * 2), (numHandlers * iconSize), boxBorder * 2), fullURL)
---        header:setTextStyle({["size"]=12,["color"]={["red"]=1,["blue"]=1,["green"]=1,["alpha"]=1},["alignment"]="center",["lineBreak"]="truncateMiddle"})
---        header:orderAbove(box)
---        header:show()
---
---        local exitDirector = function(bundleID, url)
---            if (bundleID and url) then
---                hs.urlevent.openURLWithBundle(url, bundleID)
---            end
---            for _,icon in pairs(appIcons) do
---                icon:delete()
---            end
---            for _,name in pairs(appNames) do
---                name:delete()
---            end
---            header:delete()
---            box:delete()
---            modalDirector:exit()
---        end
---
---        for num,handler in pairs(handlers) do
---            local appIcon = hs.drawing.appImage(hs.geometry.size(iconSize, iconSize), handler)
---            if appIcon then
---                local appName = hs.drawing.text(hs.geometry.size(iconSize, boxBorder), modalKeys[num].." "..hs.application.nameForBundleID(handler))
---
---                table.insert(appIcons, appIcon)
---                table.insert(appNames, appName)
---
---                appIcon:setTopLeft(hs.geometry.point(x + ((num - 1) * iconSize), y))
---                appIcon:setClickCallback(function() exitDirector(handler, fullURL) end)
---                appIcon:orderAbove(box)
---                appIcon:show()
---
---                appName:setTopLeft(hs.geometry.point(x + ((num - 1) * iconSize), y + iconSize))
---                appName:setTextStyle({["size"]=10,["color"]={["red"]=1,["blue"]=1,["green"]=1,["alpha"]=1},["alignment"]="center",["lineBreak"]="truncateMiddle"})
---                appName:orderAbove(box)
---                appName:show()
---
---                modalDirector:bind({}, modalKeys[num], function() exitDirector(handler, fullURL) end)
---            end
---        end
---
---        modalDirector:bind({}, "Escape", exitDirector)
---        modalDirector:enter()
---    end
---end
---hs.urlevent.setDefaultHandler('http')
---hs.urlevent.setRestoreHandler('http', 'com.apple.Safari')
-
 -- Reload config
 function reloadConfig(paths)
     doReload = false
@@ -625,59 +333,62 @@ function reloadConfig(paths)
     hs.reload()
 end
 
--- Hotkeys to move windows between screens, retaining their position/size relative to the screen
---hs.urlevent.bind('hyperfnleft', function() hs.window.focusedWindow():moveOneScreenWest() end)
---hs.urlevent.bind('hyperfnright', function() hs.window.focusedWindow():moveOneScreenEast() end)
+-- And now for hotkeys relating to Hyper. First, let's capture all of the functions, then we can just quickly iterate and bind them
+hyperfns = {}
 
 -- Hotkeys to resize windows absolutely
-hs.hotkey.bind(hyper, 'a', function() hs.window.focusedWindow():moveToUnit(hs.layout.left30) end)
-hs.hotkey.bind(hyper, 's', function() hs.window.focusedWindow():moveToUnit(hs.layout.right70) end)
-hs.hotkey.bind(hyper, '[', function() hs.window.focusedWindow():moveToUnit(hs.layout.left50) end)
-hs.hotkey.bind(hyper, ']', function() hs.window.focusedWindow():moveToUnit(hs.layout.right50) end)
-hs.hotkey.bind(hyper, 'f', toggle_window_maximized)
-hs.hotkey.bind(hyper, 'r', function() hs.window.focusedWindow():toggleFullScreen() end)
+hyperfns["a"] = function() hs.window.focusedWindow():moveToUnit(hs.layout.left30) end
+hyperfns["s"] = function() hs.window.focusedWindow():moveToUnit(hs.layout.right30) end
+hyperfns['['] = function() hs.window.focusedWindow():moveToUnit(hs.layout.left50) end
+hyperfns[']'] = function() hs.window.focusedWindow():moveToUnit(hs.layout.right50) end
+hyperfns['f'] = toggle_window_maximized
+hyperfns['r'] = function() hs.window.focusedWindow():toggleFullScreen() end
 
 -- Hotkeys to trigger defined layouts
-hs.hotkey.bind(hyper, '1', function() hs.layout.apply(internal_display) end)
-hs.hotkey.bind(hyper, '2', function() hs.layout.apply(dual_display) end)
+hyperfns['1'] = function() hs.layout.apply(internal_display) end
+hyperfns['2'] = function() hs.layout.apply(dual_display) end
 
 -- Hotkeys to interact with the window grid
-hs.hotkey.bind(hyper, 'g', hs.grid.show)
-hs.hotkey.bind(hyper, 'Left', hs.grid.pushWindowLeft)
-hs.hotkey.bind(hyper, 'Right', hs.grid.pushWindowRight)
-hs.hotkey.bind(hyper, 'Up', hs.grid.pushWindowUp)
-hs.hotkey.bind(hyper, 'Down', hs.grid.pushWindowDown)
+hyperfns['g'] = hs.grid.show
+hyperfns['Left'] = hs.grid.pushWindowLeft
+hyperfns['Right'] = hs.grid.pushWindowRight
+hyperfns['Up'] = hs.grid.pushWindowUp
+hyperfns['Down'] = hs.grid.pushWindowDown
+
+-- Application hotkeys
+hyperfns['e'] = function() toggle_application("iTerm2") end
+hyperfns['q'] = function() toggle_application("Safari") end
+hyperfns['z'] = function() toggle_application("Reeder") end
+hyperfns['w'] = function() toggle_application("IRC") end
+hyperfns['x'] = function() toggle_application("Xcode") end
+
+-- Misc hotkeys
+hyperfns['y'] = hs.toggleConsole
+hyperfns['n'] = function() hs.task.new("/usr/bin/open", nil, {os.getenv("HOME")}):start() end
+hyperfns['c'] = caffeine.clicked
+hyperfns['Escape'] = toggle_audio_output
+hyperfns['m'] = function()
+        device = hs.audiodevice.defaultInputDevice()
+        device:setMuted(not device:muted())
+    end
+hyperfns['d'] = function() mouseCircle:show() end
+hyperfns['u'] = typeCurrentSafariURL
+hyperfns['0'] = function()
+        print(configFileWatcher)
+        print(wifiWatcher)
+        print(screenWatcher)
+        print(usbWatcher)
+        print(caffeinateWatcher)
+    end
+
+for _hotkey, _fn in pairs(hyperfns) do
+    hs.hotkey.bind(hyper, _hotkey, _fn)
+end
 
 hs.urlevent.bind('hypershiftleft', function() hs.grid.resizeWindowThinner(hs.window.focusedWindow()) end)
 hs.urlevent.bind('hypershiftright', function() hs.grid.resizeWindowWider(hs.window.focusedWindow()) end)
 hs.urlevent.bind('hypershiftup', function() hs.grid.resizeWindowShorter(hs.window.focusedWindow()) end)
 hs.urlevent.bind('hypershiftdown', function() hs.grid.resizeWindowTaller(hs.window.focusedWindow()) end)
-
--- Application hotkeys
-hs.hotkey.bind(hyper, 'e', function() toggle_application("iTerm2") end)
-hs.hotkey.bind(hyper, 'q', function() toggle_application("Safari") end)
-hs.hotkey.bind(hyper, 'z', function() toggle_application("Reeder") end)
-hs.hotkey.bind(hyper, 'w', function() toggle_application("IRC") end)
-hs.hotkey.bind(hyper, 'x', function() toggle_application("Xcode") end)
-
--- Misc hotkeys
-hs.hotkey.bind(hyper, 'y', hs.toggleConsole)
-hs.hotkey.bind(hyper, 'n', function() hs.task.new("/usr/bin/open", nil, {os.getenv("HOME")}):start() end)
-hs.hotkey.bind(hyper, 'c', caffeineClicked)
-hs.hotkey.bind(hyper, 'Escape', toggle_audio_output)
-hs.hotkey.bind(hyper, 'm', function()
-    device = hs.audiodevice.defaultInputDevice()
-    device:setMuted(not device:muted())
-end)
-hs.hotkey.bind(hyper, 'd', mouseHighlight)
-hs.hotkey.bind(hyper, 'u', typeCurrentSafariURL)
-hs.hotkey.bind(hyper, '0', function()
-    print(configFileWatcher)
-    print(wifiWatcher)
-    print(screenWatcher)
-    print(usbWatcher)
-    print(caffeinateWatcher)
-end)
 
 -- Type the current clipboard, to get around web forms that don't let you paste
 -- (Note: I have Fn-v mapped to F17 in Karabiner)
@@ -700,12 +411,6 @@ if (hostname == "pixukipa") then
     caffeinateWatcher:start()
 end
 
--- Render our statuslets, trigger a timer to update them regularly, and do an initial update
-renderStatuslets()
-statusletTimer = hs.timer.new(hs.timer.minutes(5), triggerStatusletsUpdate)
-statusletTimer:start()
-triggerStatusletsUpdate()
-
 configFileWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", reloadConfig)
 configFileWatcher:start()
 
@@ -714,17 +419,6 @@ if hs.wifi.currentNetwork() == "chrul" then
     home_arrived()
 else
     home_departed()
-end
-
--- Start the office motion sensor
-if (hostname == "pixukipa") then
-    officeMotionWatcher = require("hueMotionSensor")
-    officeMotionWatcher.userCallback = function(presence)
-        if presence then
-            print("Motion detected in Office, declaring user activity")
-            officeMotionWatcherID = hs.caffeinate.declareUserActivity(officeMotionWatcherID)
-        end
-    end
 end
 
 -- Finally, show a notification that we finished loading the config successfully
