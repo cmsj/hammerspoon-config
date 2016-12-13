@@ -16,15 +16,14 @@ end
 function obj:start()
     self.timer = hs.timer.doAfter(10, function()
         print("Starting officeMotion watcher")
-        self.id:start()
+        self.watcher:start()
     end)
 end
 
 function obj:stop()
     print("Stopping officeMotion watcher")
-    self.id:stop()
+    self.watcher:stop()
 end
 
-function obj:callback()
-
 return obj
+
