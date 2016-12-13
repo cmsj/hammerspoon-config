@@ -81,7 +81,7 @@ function obj.statusletCallbackFirewall(code, stdout, stderr)
         color = hs.drawing.color.osx_red
     end
 
-    self.fwDot:setFillColor(color)
+    obj.fwDot:setFillColor(color)
 end
 
 function obj.statusletCallbackCCC(code, stdout, stderr)
@@ -93,7 +93,7 @@ function obj.statusletCallbackCCC(code, stdout, stderr)
         color = hs.drawing.color.osx_red
     end
 
-    self.cccDot:setFillColor(color)
+    obj.cccDot:setFillColor(color)
 end
 
 function obj.statusletCallbackArq(code, stdout, stderr)
@@ -105,7 +105,7 @@ function obj.statusletCallbackArq(code, stdout, stderr)
         color = hs.drawing.color.osx_red
     end
 
-    self.arqDot:setFillColor(color)
+    obj.arqDot:setFillColor(color)
 end
 
 function obj:update()
