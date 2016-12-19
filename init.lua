@@ -25,6 +25,7 @@ screenWatcher = nil
 usbWatcher = nil
 caffeinateWatcher = nil
 appWatcher = nil
+officeMotionWatcher = nil
 
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 
@@ -41,7 +42,7 @@ if (hostname == "pixukipa") then
     statuslets = require("statuslets"):start()
 
     -- If the Philips Hue Motion Sensor in my office detects movement, make sure my iMac screens are awake
-    officeMotionWatcher = require("officeMotion")
+    officeMotionWatcher = require("officeMotion"):init()
 else
     statuslets = nil
     officeMotionWatcher = nil
@@ -215,8 +216,9 @@ end
 -- Callback function for caffeinate events
 function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
-        if officeMotion then
-            officeMotion:start()
+        print("screensDidSleep")
+        if officeMotionWatcher then
+            officeMotionWatcher:start()
         end
 
         if hs.itunes.isPlaying() then
@@ -227,12 +229,13 @@ function caffeinateCallback(eventType)
         shouldUnmuteOnScreenWake = not output:muted()
         output:setMuted(true)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
+        print("screensDidWake")
         if shouldUnmuteOnScreenWake then
             hs.audiodevice.defaultOutputDevice():setMuted(false)
         end
 
-        if officeMotion then
-            officeMotion:stop()
+        if officeMotionWatcher then
+            officeMotionWatcher:stop()
         end
     end
 end

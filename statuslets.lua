@@ -70,6 +70,8 @@ function obj:render()
     self.fwDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
     self.cccDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
     self.arqDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
+
+    return self
 end
 
 function obj.statusletCallbackFirewall(code, stdout, stderr)
@@ -121,6 +123,17 @@ function obj:start()
     self.timer = hs.timer.new(hs.timer.minutes(5), function(self) self:update() end)
     self.timer:start()
     self:update()
+    return self
+end
+
+function obj:stop()
+    self.timer:stop()
+    self.cccDot:delete()
+    self.cccText:delete()
+    self.arqDot:delete()
+    self.arqText:delete()
+    self.fwDot:delete()
+    self.fwText:delete()
     return self
 end
 

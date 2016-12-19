@@ -24,6 +24,15 @@ function hueBridge:debug(msg)
     print(string.format("DEBUG: hueMotionSensor: %s", msg))
 end
 
+function hueBridge:init()
+    if not self.userCallback then
+        print("ERROR: No userCallback has been set")
+        return self
+    end
+    self:isReadyForPolling()
+    return self
+end
+
 function hueBridge:start()
     if not self.userCallback then
         print("ERROR: No userCallback has been set")
@@ -34,6 +43,7 @@ function hueBridge:start()
 end
 
 function hueBridge:stop()
+    print("Stopping hueMotionSensor polling")
     if self.pollingBeginTimer then
         self.pollingBeginTimer:stop()
     end
@@ -159,6 +169,7 @@ end
 function hueBridge:pollingStart()
     self.pollingTimer = hs.timer.new(2, function() self:doPoll() end)
     self.pollingTimer:start()
+    return self
 end
 
 function hueBridge:doPoll()

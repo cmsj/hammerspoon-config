@@ -36,6 +36,8 @@ function mouseCircle:show()
         self.circle:hide(0.5)
         hs.timer.doAfter(0.6, function() self.circle:delete() end)
     end)
+
+    return self
 end
 
 

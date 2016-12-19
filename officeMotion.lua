@@ -13,16 +13,24 @@ obj.watcher.userCallback = function(presence)
     end
 end
 
+function obj:init()
+    self.watcher:init()
+    return self
+end
+
 function obj:start()
-    self.timer = hs.timer.doAfter(10, function()
+    self.timer = hs.timer.doAfter(30, function()
         print("Starting officeMotion watcher")
         self.watcher:start()
     end)
+    return self
 end
 
 function obj:stop()
     print("Stopping officeMotion watcher")
+    self.timer:stop()
     self.watcher:stop()
+    return self
 end
 
 return obj
