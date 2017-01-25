@@ -61,7 +61,7 @@ display_monitor = "Thunderbolt Display"
 
 -- Define audio device names for headphone/speaker switching
 headphoneDevice = "Turtle Beach USB Audio"
-speakerDevice = "Audioengine 2_  "
+speakerDevice = "Audioengine 2+  "
 
 -- Defines for WiFi watcher
 homeSSID = "chrul" -- My home WiFi SSID
