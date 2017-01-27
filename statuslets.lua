@@ -1,6 +1,6 @@
 print("Loading statuslets")
 local obj = {}
-obj.__index = statuslets
+obj.__index = obj
 
 obj.timer = nil
 
@@ -115,12 +115,13 @@ function obj:update()
     hs.task.new("/usr/bin/sudo", self.statusletCallbackFirewall, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--getblockall"}):start()
     hs.task.new("/usr/bin/grep", self.statusletCallbackCCC, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.cccLast"}):start()
     hs.task.new("/usr/bin/grep", self.statusletCallbackArq, {"-q", "Arq.*finished backup", "/var/log/system.log"}):start()
+    return self
 end
 
 -- Render our statuslets, trigger a timer to update them regularly, and do an initial update
 function obj:start()
     self:render()
-    self.timer = hs.timer.new(hs.timer.minutes(5), function(self) self:update() end)
+    self.timer = hs.timer.new(hs.timer.minutes(5), function(obj) obj:update() end)
     self.timer:start()
     self:update()
     return self
