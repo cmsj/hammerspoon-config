@@ -1,6 +1,7 @@
 --hs.crash.throwObjCException("lolception", "This was deliberate")
 -- Print out more logging for me to see
-hs.crash.crashLogToNSLog = true
+require("hs.crash")
+hs.crash.crashLogToNSLog = false
 
 -- Trace all Lua code
 function lineTraceHook(event, data)
@@ -211,6 +212,31 @@ function usbDeviceCallback(data)
             app:kill()
         end
     end
+    if (data["vendorID"] == 2425 and data["productID"] == 551) then
+        event = data["eventType"]
+        if (event == "added") then
+            print("Kids camera detected")
+            -- Choose which kid's camera this is
+            chooser = hs.chooser.new(function(choice)
+                child = choice["text"]
+                dateTime = os.date("!%Y-%m-%d-%T")
+                dirName = "/Users/cmsj/Desktop/KidsCameras/"..child.."/"..dateTime
+                print("  Making: "..dirName)
+                if not hs.fs.mkdir(dirName) then
+                    hs.alert("Unable to make directory.\nIMPORT FAILED")
+                    return
+                end
+                -- Call the crummy photo importing app with the directory we just made
+                hs.task.new("/Library/QuickTime/V25.app/Contents/MacOS/MyDSC", function(exitCode, stdOut, stdErr)
+                    print(string.format("V25.app exited: %d", exitCode))
+                    print("stdOut: "..stdOut)
+                    print("stdErr: "..stdErr)
+                end, {dirName, "-d"}):start()
+            end)
+            chooser:choices({{["text"] = "Jasper"},{["text"] = "Niklas"}})
+            chooser:show()
+        end
+    end
 end
 
 -- Callback function for caffeinate events
@@ -406,10 +432,10 @@ screenWatcher:start()
 wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
 wifiWatcher:start()
 
-if (hostname == "pixukipa") then
-    usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
-    usbWatcher:start()
+usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
+usbWatcher:start()
 
+if (hostname == "pixukipa") then
     caffeinateWatcher = hs.caffeinate.watcher.new(caffeinateCallback)
     caffeinateWatcher:start()
 end
