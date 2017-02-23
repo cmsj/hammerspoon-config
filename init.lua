@@ -3,6 +3,7 @@
 require("hs.crash")
 hs.crash.crashLogToNSLog = false
 
+hs.window.animationDuration = 0.1
 -- Trace all Lua code
 function lineTraceHook(event, data)
     lineInfo = debug.getinfo(2, "Snl")
@@ -27,6 +28,8 @@ usbWatcher = nil
 caffeinateWatcher = nil
 appWatcher = nil
 officeMotionWatcher = nil
+seal = require("seal")
+seal:init({"apps", "viscosity"})
 
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 
@@ -415,6 +418,8 @@ for _hotkey, _fn in pairs(hyperfns) do
     hs.hotkey.bind(hyper, _hotkey, _fn)
 end
 
+hs.hotkey.bind({"cmd"}, "Space", function() seal:show() end)
+
 hs.urlevent.bind('hypershiftleft', function() hs.grid.resizeWindowThinner(hs.window.focusedWindow()) end)
 hs.urlevent.bind('hypershiftright', function() hs.grid.resizeWindowWider(hs.window.focusedWindow()) end)
 hs.urlevent.bind('hypershiftup', function() hs.grid.resizeWindowShorter(hs.window.focusedWindow()) end)
@@ -467,8 +472,8 @@ hs.notify.new({
 -- end
 -- debug.sethook(crashifnotmain, 'c')
 
-collectgarbage("setstepmul", 1000)
-collectgarbage("setpause", 1)
+--collectgarbage("setstepmul", 1000)
+--collectgarbage("setpause", 1)
 
 --local wfRedshift=hs.window.filter.new({loginwindow={visible=true,allowRoles='*'}},'wf-redshift')
 --hs.redshift.start(2000,'20:00','7:00','3h',false,wfRedshift)
