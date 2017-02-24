@@ -29,7 +29,7 @@ caffeinateWatcher = nil
 appWatcher = nil
 officeMotionWatcher = nil
 seal = require("seal")
-seal:init({"apps", "viscosity"})
+seal:init({"apps", "viscosity", "screencapture"})
 
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 
