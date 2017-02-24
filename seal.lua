@@ -27,11 +27,10 @@ function obj:init(plugins)
     return self
 end
 
-function obj:start(hotkey)
-    -- Currently nothing to do here
+function obj:start(modifiers, hotkey)
     print("Starting seal")
     if hotkey then
-        self.hotkeyShow = hs.hotkey.bind(hotkey[1], hotkey[2], function() obj:show() end)
+        self.hotkeyShow = hs.hotkey.bind(modifiers, hotkey, function() obj:show() end)
     end
     return self
 end
@@ -67,6 +66,7 @@ function obj.completionCallback(rowInfo)
 end
 
 function obj.choicesCallback()
+    -- TODO: Sort each of these clusters of choices, alphabetically
     choices = {}
     query = obj.chooser:query()
     cmd = nil
@@ -104,6 +104,7 @@ function obj.choicesCallback()
         end
     end
     -- Now add in any matching commands
+    -- TODO: This only makes sense to do if we can select the choice without dismissing the chooser, which requires changes to HSChooser
     for command,cmdInfo in pairs(obj.commands) do
         if string.match(command, query) and #query_words == 0 then
             choice = {}
@@ -114,7 +115,6 @@ function obj.choicesCallback()
         end
     end
 
-    --print("Adding choices: "..hs.inspect(choices))
     return choices
 end
 

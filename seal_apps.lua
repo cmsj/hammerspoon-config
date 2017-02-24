@@ -1,6 +1,55 @@
 local obj = {}
 obj.__index = obj
 obj.__name = "seal_apps"
+obj.appCache = {}
+obj.appSearchPaths = {
+    "/Applications",
+    "~/Applications",
+    "/Developer/Applications",
+    "/Applications/Xcode.app/Contents/Applications",
+    "/System/Library/PreferencePanes",
+    "/Library/PreferencePanes",
+    "~/Library/PreferencePanes",
+    "/System/Library/CoreServices/Applications",
+    "/usr/local/Cellar",
+}
+
+local modifyNameMap = function(info, add)
+    for _, item in ipairs(info) do
+        if add then
+            bundleID = item.kMDItemCFBundleIdentifier
+            icon = nil
+            if bundleID then
+                icon = hs.image.imageFromAppBundle(bundleID)
+            end
+            obj.appCache[item.kMDItemDisplayName] = {
+                path = item.kMDItemPath,
+                bundleID = bundleID,
+                icon = icon
+            }
+        else
+            obj.appCache[item.kMDItemDisplayName] = nil
+        end
+    end
+end
+
+local updateNameMap = function(obj, msg, info)
+    if info then
+        -- all three can occur in either message, so check them all!
+        if info.kMDQueryUpdateAddedItems   then modifyNameMap(info.kMDQueryUpdateAddedItems,   true)  end
+        if info.kMDQueryUpdateChangedItems then modifyNameMap(info.kMDQueryUpdateChangedItems, true)  end
+        if info.kMDQueryUpdateRemovedItems then modifyNameMap(info.kMDQueryUpdateRemovedItems, false) end
+    else
+        -- shouldn't happen for didUpdate or inProgress
+        print("~~~ userInfo from SpotLight was empty for " .. msg)
+    end
+end
+
+obj.spotlight = hs.spotlight.new():queryString([[ kMDItemContentType = "com.apple.application-bundle" ]])
+                                  :callbackMessages("didUpdate", "inProgress")
+                                  :setCallback(updateNameMap)
+                                  :searchScopes(obj.appSearchPaths)
+                                  :start()
 
 function obj:commands()
     return {kill = {
@@ -14,30 +63,34 @@ function obj:commands()
 end
 
 function obj:bare()
-    return self.choicesRunningApps
+    return self.choicesApps
 end
 
-function obj.choicesRunningApps(query)
+function obj.choicesApps(query)
     local choices = {}
-    if query == nil then
+    if query == nil or query == "" then
         return choices
     end
-    local apps = hs.application.runningApplications()
-    for k,app in pairs(apps) do
-        local name = app:name()
-        if string.match(name:lower(), query:lower()) and app:mainWindow() then
+    for name,app in pairs(obj.appCache) do
+        if string.match(name:lower(), query:lower()) then
             local choice = {}
-            choice["text"] = name.." (Running)"
-            choice["subText"] = app:path().." PID: "..app:pid()
-            if app:bundleID() then
-                choice["image"] = hs.image.imageFromAppBundle(app:bundleID())
-                choice["bundleID"] = app:bundleID()
+            local instances = {}
+            if app["bundleID"] then
+                instances = hs.application.applicationsForBundleID(app["bundleID"])
             end
-            choice["pid"] = app:pid()
-            choice["path"] = app:path()
-            choice["uuid"] = obj.__name.."__"..(app:bundleID() or name)
+            if #instances > 0 then
+                choice["text"] = name .. " (Running)"
+            else
+                choice["text"] = name
+            end
+            choice["subText"] = app["path"]
+            if app["icon"] then
+                choice["image"] = app["icon"]
+            end
+            choice["path"] = app["path"]
+            choice["uuid"] = obj.__name.."__"..(app["bundleID"] or name)
             choice["plugin"] = obj.__name
-            choice["type"] = "running"
+            choice["type"] = "launchOrFocus"
             table.insert(choices, choice)
         end
     end
@@ -70,8 +123,8 @@ function obj.choicesSomeCommand(query)
 end
 
 function obj.completionCallback(rowInfo)
-    if rowInfo["type"] == "running" then
-        hs.application.get(rowInfo["pid"]):activate(true)
+    if rowInfo["type"] == "launchOrFocus" then
+        hs.application.launchOrFocus(rowInfo["path"])
     elseif rowInfo["type"] == "kill" then
         hs.application.get(rowInfo["pid"]):kill()
     end
