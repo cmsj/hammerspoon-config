@@ -132,11 +132,6 @@ function obj.choicesVPNCommand(query)
     local img_connected = hs.image.imageFromPath("locked.png")
     local img_disconnected = hs.image.imageFromPath("unlocked.png")
 
-    -- TODO: We probably ought to do this in seal.lua
-    if (query or "") == "" then
-        query = ".*"
-    end
-
     for k,v in pairs(connections) do
         name = v["name"]
         if string.match(name:lower(), query:lower()) then

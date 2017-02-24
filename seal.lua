@@ -86,6 +86,9 @@ function obj.choicesCallback()
     for command,cmdInfo in pairs(obj.commands) do
         cmd_fn = cmdInfo["fn"]
         if cmd:lower() == command:lower() then
+            if (query_words or "") == "" then
+                query_words = ".*"
+            end
             fn_choices = cmd_fn(query_words)
             if fn_choices ~= nil then
                 for j,choice in pairs(fn_choices) do
