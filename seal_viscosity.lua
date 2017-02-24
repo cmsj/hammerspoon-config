@@ -128,28 +128,33 @@ end
 
 function obj.choicesVPNCommand(query)
     local choices = {}
-    if query == nil then
-        return choices
-    end
     local connections = obj.getVPNConnections()
     local img_connected = hs.image.imageFromPath("locked.png")
     local img_disconnected = hs.image.imageFromPath("unlocked.png")
+
+    -- TODO: We probably ought to do this in seal.lua
+    if (query or "") == "" then
+        query = ".*"
+    end
+
     for k,v in pairs(connections) do
         name = v["name"]
-        state = v["state"]
-        local choice = {}
-        choice["text"] = name
-        choice["subText"] = state
-        if state == "Connected" then
-            choice["image"] = img_connected
-        else
-            choice["image"] = img_disconnected
+        if string.match(name:lower(), query:lower()) then
+            state = v["state"]
+            local choice = {}
+            choice["text"] = name
+            choice["subText"] = state
+            if state == "Connected" then
+                choice["image"] = img_connected
+            else
+                choice["image"] = img_disconnected
+            end
+            choice["name"] = name
+            choice["state"] = state
+            choice["plugin"] = obj.__name
+            choice["type"] = "toggle"
+            table.insert(choices, choice)
         end
-        choice["name"] = name
-        choice["state"] = state
-        choice["plugin"] = obj.__name
-        choice["type"] = "toggle"
-        table.insert(choices, choice)
     end
     return choices
 end
