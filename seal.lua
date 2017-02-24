@@ -78,7 +78,7 @@ function obj.choicesCallback()
         if cmd == nil then
             cmd = word
         else
-            table.insert(query_words, word, #query_words + 1)
+            table.insert(query_words, word)
         end
     end
     query_words = table.concat(query_words, " ")
