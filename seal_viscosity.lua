@@ -154,10 +154,6 @@ function obj.choicesVPNCommand(query)
     return choices
 end
 
-function obj.choicesSomeCommand(query)
-    return {}
-end
-
 function obj.completionCallback(rowInfo)
     if rowInfo["type"] == "toggle" then
         if rowInfo["state"] == "Connected" then

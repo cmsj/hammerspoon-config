@@ -118,10 +118,6 @@ function obj.choicesKillCommand(query)
     return choices
 end
 
-function obj.choicesSomeCommand(query)
-    return {}
-end
-
 function obj.completionCallback(rowInfo)
     if rowInfo["type"] == "launchOrFocus" then
         hs.application.launchOrFocus(rowInfo["path"])
