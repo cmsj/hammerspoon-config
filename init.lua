@@ -301,8 +301,8 @@ function home_arrived()
     hs.applescript.applescript([[
         tell application "Finder"
             try
-                mount volume "smb://cmsj@fairukipa._smb._tcp.local/Secure"
-                mount volume "smb://cmsj@fairukipa._smb._tcp.local/Media"
+                mount volume "smb://admin@fairukipa._smb._tcp.local/Secure"
+                mount volume "smb://admin@fairukipa._smb._tcp.local/Media"
             end try
         end tell
     ]])
