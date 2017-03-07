@@ -125,7 +125,7 @@ function obj.queryChangedCallback(query)
     if obj.queryChangedTimer then
         obj.queryChangedTimer:stop()
     end
-    obj.queryChangedTimer = hs.timer.doAfter(0.5, function() obj.chooser:refreshChoicesCallback() end)
+    obj.queryChangedTimer = hs.timer.doAfter(0.2, function() obj.chooser:refreshChoicesCallback() end)
 end
 
 return obj
