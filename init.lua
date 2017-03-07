@@ -29,7 +29,7 @@ caffeinateWatcher = nil
 appWatcher = nil
 officeMotionWatcher = nil
 seal = require("seal")
-seal:init({"apps", "viscosity", "screencapture", "safari_bookmarks"})
+seal:init({"apps", "viscosity", "screencapture", "safari_bookmarks", "calc"})
 
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 
@@ -212,6 +212,15 @@ function usbDeviceCallback(data)
             hs.application.launchOrFocus("ScanSnap Manager")
         elseif (event == "removed") then
             app = hs.appfinder.appFromName("ScanSnap Manager")
+            app:kill()
+        end
+    end
+    if (data["productName"] == "Wireless Controller" and data["vendorName"] == "Sony Computer Entertainment") then
+        event = data["eventType"]
+        if (event == "added") then
+            hs.application.launchOrFocus("RemotePlay")
+        elseif (event == "removed") then
+            app = hs.appfinder.appFromName("PS4 Remote Play")
             app:kill()
         end
     end
