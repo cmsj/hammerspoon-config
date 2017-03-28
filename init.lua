@@ -1,3 +1,9 @@
+-- Enable this to do live debugging in ZeroBrane Studio
+-- local ZBS = "/Applications/ZeroBraneStudio.app/Contents/ZeroBraneStudio"
+-- package.path = package.path .. ";" .. ZBS .. "/lualibs/?/?.lua;" .. ZBS .. "/lualibs/?.lua"
+-- package.cpath = package.cpath .. ";" .. ZBS .. "/bin/?.dylib;" .. ZBS .. "/bin/clibs53/?.dylib"
+-- require("mobdebug").start()
+
 --hs.crash.throwObjCException("lolception", "This was deliberate")
 -- Print out more logging for me to see
 require("hs.crash")
@@ -219,6 +225,7 @@ function usbDeviceCallback(data)
         event = data["eventType"]
         if (event == "added") then
             hs.application.launchOrFocus("RemotePlay")
+            hs.itunes.pause()
         elseif (event == "removed") then
             app = hs.appfinder.appFromName("PS4 Remote Play")
             app:kill()
