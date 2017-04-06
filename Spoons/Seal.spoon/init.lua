@@ -1,7 +1,11 @@
-print("Loading seal")
-
 local obj = {}
 obj.__index = obj
+
+obj.name = "Seal"
+obj.version = "1.0"
+obj.author = "Chris Jones <cmsj@tenshu.net>"
+obj.homepage = "https://github.com/Hammerspoon/Spoons"
+obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 obj.chooser = nil
 obj.hotkeyShow = nil
@@ -9,34 +13,51 @@ obj.plugins = {}
 obj.commands = {}
 obj.queryChangedTimer = nil
 
-function obj:init(plugins)
-    print("Initialising seal")
+local function script_path()
+    local str = debug.getinfo(2, "S").source:sub(2)
+    return str:match("(.*/)")
+end
+obj.spoonPath = script_path()
+
+function obj:loadPlugins(plugins)
     self.chooser = hs.chooser.new(self.completionCallback)
     self.chooser:choices(self.choicesCallback)
     self.chooser:queryChangedCallback(self.queryChangedCallback)
 
     for k,plugin_name in pairs(plugins) do
-        print("  Loading seal plugin: " .. plugin_name)
-        plugin = require("seal_"..plugin_name)
+        print("-- Loading Seal plugin: " .. plugin_name)
+        plugin = dofile(self.spoonPath.."/seal_"..plugin_name..".lua")
+        plugin.seal = self
         table.insert(obj.plugins, plugin)
         for cmd,cmdInfo in pairs(plugin:commands()) do
-            print("Adding command: "..cmd)
+            print("-- Adding Seal command: "..cmd)
             obj.commands[cmd] = cmdInfo
         end
     end
     return self
 end
 
-function obj:start(modifiers, hotkey)
-    print("Starting seal")
-    if hotkey then
-        self.hotkeyShow = hs.hotkey.bind(modifiers, hotkey, function() obj:show() end)
+function obj:bindHotkeys(mapping)
+    if (self.hotkeyShow) then
+        self.hotkeyShow:delete()
+    end
+    local showMods = mapping["show"][1]
+    local showKey = mapping["show"][2]
+    self.hotkeyShow = hs.hotkey.new(showMods, showKey, function() self:show() end)
+
+    return self
+end
+
+function obj:start()
+    print("-- Starting Seal")
+    if self.hotkeyShow then
+        self.hotkeyShow:enable()
     end
     return self
 end
 
 function obj:stop()
-    print("Stopping seal")
+    print("-- Stopping Seal")
     self.chooser:hide()
     if self.hotkeyShow then
         self.hotkeyShow:disable()

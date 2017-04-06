@@ -26,6 +26,10 @@ hostname = hs.host.localizedName()
 -- Ensure the IPC command line client is available
 hs.ipc.cliInstall()
 
+-- Define some keyboard modifier variables
+-- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
+hyper = {"⌘", "⌥", "⌃", "⇧"}
+
 -- Watchers and other useful objects
 configFileWatcher = nil
 wifiWatcher = nil
@@ -34,18 +38,26 @@ usbWatcher = nil
 caffeinateWatcher = nil
 appWatcher = nil
 officeMotionWatcher = nil
-seal = require("seal")
-seal:init({"apps", "viscosity", "screencapture", "safari_bookmarks", "calc"})
 
--- Load various modules from ~/.hammerspoon/ depending on which machine this is
+-- Load Seal
+hs.loadSpoon("Seal")
+spoon.Seal:loadPlugins({"apps", "viscosity", "screencapture", "safari_bookmarks", "calc"})
+spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
+spoon.Seal:start()
 
 -- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
 -- This draws a bright red circle around the pointer for a few seconds
-mouseCircle = require("mouseCircle"):start()
+hs.loadSpoon("MouseCircle")
+spoon.MouseCircle:bindHotkeys({show={hyper, "d"}})
 
 -- Replace Caffeine.app with 18 lines of Lua :D
-caffeine = require("caffeine"):start()
+hs.loadSpoon("Caffeine")
+spoon.Caffeine:bindHotkeys({toggle={hyper, "c"}})
+spoon.Caffeine:start()
+--caffeine = require("caffeine"):start()
+--hyperfns['c'] = caffeine.clicked
 
+-- Load various modules from ~/.hammerspoon/ depending on which machine this is
 if (hostname == "pixukipa") then
     -- I like to have some little traffic light coloured dots in the bottom right corner of my screen
     -- to show various status items. Like Geeklet
@@ -60,10 +72,6 @@ else
     -- Display a menubar item to indicate if the Internet is reachable
     reachabilityMenuItem = require("reachabilityMenuItem"):start()
 end
-
--- Define some keyboard modifier variables
--- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
-hyper = {"⌘", "⌥", "⌃", "⇧"}
 
 -- Define monitor names for layout purposes
 display_imac = "iMac"
@@ -414,13 +422,11 @@ hyperfns['x'] = function() toggle_application("Xcode") end
 -- Misc hotkeys
 hyperfns['y'] = hs.toggleConsole
 hyperfns['n'] = function() hs.task.new("/usr/bin/open", nil, {os.getenv("HOME")}):start() end
-hyperfns['c'] = caffeine.clicked
 hyperfns['Escape'] = toggle_audio_output
 hyperfns['m'] = function()
         device = hs.audiodevice.defaultInputDevice()
         device:setMuted(not device:muted())
     end
-hyperfns['d'] = function() mouseCircle:show() end
 hyperfns['u'] = typeCurrentSafariURL
 hyperfns['0'] = function()
         print(configFileWatcher)
@@ -433,8 +439,6 @@ hyperfns['0'] = function()
 for _hotkey, _fn in pairs(hyperfns) do
     hs.hotkey.bind(hyper, _hotkey, _fn)
 end
-
-hs.hotkey.bind({"cmd"}, "Space", function() seal:show() end)
 
 hs.urlevent.bind('hypershiftleft', function() hs.grid.resizeWindowThinner(hs.window.focusedWindow()) end)
 hs.urlevent.bind('hypershiftright', function() hs.grid.resizeWindowWider(hs.window.focusedWindow()) end)
