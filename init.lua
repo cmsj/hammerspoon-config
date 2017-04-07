@@ -39,7 +39,7 @@ caffeinateWatcher = nil
 appWatcher = nil
 officeMotionWatcher = nil
 
--- Load Seal
+-- Load Seal - This is a pretty simple implementation of something like Alfred
 hs.loadSpoon("Seal")
 spoon.Seal:loadPlugins({"apps", "viscosity", "screencapture", "safari_bookmarks", "calc"})
 spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
