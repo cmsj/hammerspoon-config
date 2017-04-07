@@ -54,8 +54,6 @@ spoon.MouseCircle:bindHotkeys({show={hyper, "d"}})
 hs.loadSpoon("Caffeine")
 spoon.Caffeine:bindHotkeys({toggle={hyper, "c"}})
 spoon.Caffeine:start()
---caffeine = require("caffeine"):start()
---hyperfns['c'] = caffeine.clicked
 
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 if (hostname == "pixukipa") then
