@@ -13,6 +13,8 @@ obj.cccDot = nil
 obj.arqText = nil
 obj.arqDot = nil
 
+hs.canvas.drawingWrapper(true)
+
 function obj:render()
     -- Destroy existing Statuslets
     if self.fwText then self.fwText:delete() end
