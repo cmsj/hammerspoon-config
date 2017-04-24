@@ -1,6 +1,11 @@
+--- === Seal ===
+---
+--- Pluggable launch bar
+
 local obj = {}
 obj.__index = obj
 
+-- Metadata
 obj.name = "Seal"
 obj.version = "1.0"
 obj.author = "Chris Jones <cmsj@tenshu.net>"
@@ -13,12 +18,27 @@ obj.plugins = {}
 obj.commands = {}
 obj.queryChangedTimer = nil
 
+-- Internal function used to find our location, so we know where to load plugins from
 local function script_path()
     local str = debug.getinfo(2, "S").source:sub(2)
     return str:match("(.*/)")
 end
 obj.spoonPath = script_path()
 
+--- Seal:loadPlugins(plugins)
+--- Method
+--- Loads a list of Seal plugins
+---
+--- Parameters:
+---  * plugins - A list containing the names of plugins to load
+---
+--- Returns:
+---  * The Seal object
+---
+--- Notes:
+---  * The plugins live inside the Seal.spoon directory
+---  * The plugin names in the list, should not have `seal_` at the start, or `.lua` at the end
+---  * Some plugins may immediately begin doing background work (e.g. Spotlight searches)
 function obj:loadPlugins(plugins)
     self.chooser = hs.chooser.new(self.completionCallback)
     self.chooser:choices(self.choicesCallback)
@@ -37,6 +57,16 @@ function obj:loadPlugins(plugins)
     return self
 end
 
+--- Seal:bindHotkeys(mapping)
+--- Method
+--- Binds hotkeys for Seal
+---
+--- Parameters:
+---  * mapping - A table containing hotkey modifier/key details for the following items:
+---   * show - This will cause Seal's UI to be shown
+---
+--- Returns:
+---  * The Seal object
 function obj:bindHotkeys(mapping)
     if (self.hotkeyShow) then
         self.hotkeyShow:delete()
@@ -48,6 +78,15 @@ function obj:bindHotkeys(mapping)
     return self
 end
 
+--- Seal:start()
+--- Method
+--- Starts Seal
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * The Seal object
 function obj:start()
     print("-- Starting Seal")
     if self.hotkeyShow then
@@ -56,6 +95,18 @@ function obj:start()
     return self
 end
 
+--- Seal:stop()
+--- Method
+--- Stops Seal
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * The Seal object
+---
+--- Notes:
+---  * Some Seal plugins will continue performing background work even after this call (e.g. Spotlight searches)
 function obj:stop()
     print("-- Stopping Seal")
     self.chooser:hide()
@@ -65,6 +116,18 @@ function obj:stop()
     return self
 end
 
+--- Seal:show()
+--- Method
+--- Shows the Seal UI
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * None
+---
+--- Notes:
+---  * This may be useful if you wish to show Seal in response to something other than its hotkey
 function obj:show()
     self.chooser:show()
     return self

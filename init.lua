@@ -55,6 +55,10 @@ hs.loadSpoon("Caffeine")
 spoon.Caffeine:bindHotkeys({toggle={hyper, "c"}})
 spoon.Caffeine:start()
 
+-- Draw pretty rounded corners on all screens
+hs.loadSpoon("RoundedCorners")
+spoon.RoundedCorners:start()
+
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 if (hostname == "pixukipa") then
     -- I like to have some little traffic light coloured dots in the bottom right corner of my screen
@@ -323,8 +327,8 @@ function home_arrived()
     hs.applescript.applescript([[
         tell application "Finder"
             try
-                mount volume "smb://admin@fairukipa._smb._tcp.local/Secure"
-                mount volume "smb://admin@fairukipa._smb._tcp.local/Media"
+                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/Secure"
+                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/Media"
             end try
         end tell
     ]])
@@ -415,7 +419,6 @@ hyperfns['e'] = function() toggle_application("iTerm2") end
 hyperfns['q'] = function() toggle_application("Safari") end
 hyperfns['z'] = function() toggle_application("Reeder") end
 hyperfns['w'] = function() toggle_application("IRC") end
-hyperfns['x'] = function() toggle_application("Xcode") end
 
 -- Misc hotkeys
 hyperfns['y'] = hs.toggleConsole
