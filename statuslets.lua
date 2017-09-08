@@ -4,25 +4,26 @@ obj.__index = obj
 
 obj.timer = nil
 
-obj.fwText = nil
-obj.fwDot = nil
-
 obj.cccText = nil
 obj.cccDot = nil
 
 obj.arqText = nil
 obj.arqDot = nil
 
+obj.updateText = nil
+obj.updateDot = nil
+obj.updateCounter = nil
+
 hs.canvas.drawingWrapper(true)
 
 function obj:render()
     -- Destroy existing Statuslets
-    if self.fwText then self.fwText:delete() end
-    if self.fwDot then self.fwDot:delete() end
     if self.cccText then self.cccText:delete() end
     if self.cccDot then self.cccDot:delete() end
     if self.arqText then self.arqText:delete() end
     if self.arqDot then self.arqDot:delete() end
+    if self.updateText then self.updateText:delete() end
+    if self.updateDot then self.updateDot:delete() end
 
     -- Defines for statuslets - little coloured dots in the corner of my screen that give me status info, see:
     -- https://www.dropbox.com/s/3v2vyhi1beyujtj/Screenshot%202015-03-11%2016.13.25.png?dl=0
@@ -38,54 +39,42 @@ function obj:render()
     local statusDot_y = statusText_y
 
     -- Now create the text/circle objects using the sizes/positions we just declared (plus a little fudging to make it all align properly)
-    self.fwText = hs.drawing.text(hs.geometry.rect(statusText_x + 5,
-                                                          statusText_y - (statusTextHeight*2) + 2,
-                                                          statusTextWidth,
-                                                          statusTextHeight), "FW:")
     self.cccText = hs.drawing.text(hs.geometry.rect(statusText_x,
                                                      statusText_y - statusTextHeight + 1,
                                                      statusTextWidth,
                                                      statusTextHeight), "CCC:")
-    self.arqText = hs.drawing.text(hs.geometry.rect(statusText_x + 4,
+    self.arqText = hs.drawing.text(hs.geometry.rect(statusText_x + 6,
                                                      statusText_y,
                                                      statusTextWidth,
                                                      statusTextHeight), "Arq:")
+    self.updateText = hs.drawing.text(hs.geometry.rect(statusText_x - 2,
+                                                     statusText_y - (statusTextHeight*2) + 1,
+                                                     statusTextWidth,
+                                                     statusTextHeight), "Brew:")
 
-    self.fwDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                           statusDot_y - (statusTextHeight*2) + 4,
-                                                           statusDotWidth,
-                                                           statusDotWidth))
     self.cccDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
                                                       statusDot_y - statusTextHeight + 3,
                                                       statusDotWidth,
                                                       statusDotWidth))
     self.arqDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
-                                                      statusDot_y + 2,
+                                                      statusDot_y + 3,
+                                                      statusDotWidth,
+                                                      statusDotWidth))
+    self.updateDot = hs.drawing.circle(hs.geometry.rect(statusDot_x,
+                                                      statusDot_y - (statusTextHeight*2) + 3,
                                                       statusDotWidth,
                                                       statusDotWidth))
 
     -- Finally, configure the rendering style of the text/circle objects, clamp them to the desktop, and show them
-    self.fwText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
     self.cccText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
     self.arqText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
+    self.updateText:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setTextSize(11):sendToBack():show(0.5)
 
-    self.fwDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
     self.cccDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
     self.arqDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
+    self.updateDot:setBehaviorByLabels({"canJoinAllSpaces", "stationary"}):setFillColor(hs.drawing.color.osx_yellow):setStroke(false):sendToBack():show(0.5)
 
     return self
-end
-
-function obj.statusletCallbackFirewall(code, stdout, stderr)
-    local color
-
-    if string.find(stdout, "block all non-essential") then
-        color = hs.drawing.color.osx_green
-    else
-        color = hs.drawing.color.osx_red
-    end
-
-    obj.fwDot:setFillColor(color)
 end
 
 function obj.statusletCallbackCCC(code, stdout, stderr)
@@ -112,17 +101,35 @@ function obj.statusletCallbackArq(code, stdout, stderr)
     obj.arqDot:setFillColor(color)
 end
 
+function obj.statusletCallbackUpdate(code, stdout, stderr)
+    local color
+
+    if code == 0 then
+        color = hs.drawing.color.osx_green
+    else
+        color = hs.drawing.color.osx_red
+    end
+
+    obj.updateDot:setFillColor(color)
+end
+
 function obj:update()
     print("statuslets:update()")
-    hs.task.new("/usr/bin/sudo", self.statusletCallbackFirewall, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--getblockall"}):start()
     hs.task.new("/usr/bin/grep", self.statusletCallbackCCC, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.cccLast"}):start()
     hs.task.new("/usr/bin/grep", self.statusletCallbackArq, {"-q", "Arq.*finished backup", "/var/log/system.log"}):start()
+    if self.updateCounter > 10 then
+        hs.task.new("/Users/cmsj/bin/check_updates.sh", self.statusletCallbackUpdate, {}):start()
+        self.updateCounter = 0
+    else
+        self.updateCounter = self.updateCounter + 1
+    end
     return self
 end
 
 -- Render our statuslets, trigger a timer to update them regularly, and do an initial update
 function obj:start()
     self:render()
+    self.updateCounter = 0
     self.timer = hs.timer.new(hs.timer.minutes(5), function(obj) obj:update() end)
     self.timer:start()
     self:update()
@@ -135,8 +142,8 @@ function obj:stop()
     self.cccText:delete()
     self.arqDot:delete()
     self.arqText:delete()
-    self.fwDot:delete()
-    self.fwText:delete()
+    self.updateDot:delete()
+    self.updateText:delete()
     return self
 end
 

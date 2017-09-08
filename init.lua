@@ -30,7 +30,7 @@ hs.ipc.cliInstall()
 -- (Node: Capslock bound to cmd+alt+ctrl+shift via Seil and Karabiner)
 hyper = {"⌘", "⌥", "⌃", "⇧"}
 
--- Watchers and other useful objects
+-- Watchers
 configFileWatcher = nil
 wifiWatcher = nil
 screenWatcher = nil
@@ -39,9 +39,15 @@ caffeinateWatcher = nil
 appWatcher = nil
 officeMotionWatcher = nil
 
+-- Watchables
+audiodeviceWatchable = nil
+
+-- Other useful objects
+streamDeck = nil
+
 -- Load Seal - This is a pretty simple implementation of something like Alfred
 hs.loadSpoon("Seal")
-spoon.Seal:loadPlugins({"apps", "viscosity", "screencapture", "safari_bookmarks", "calc"})
+spoon.Seal:loadPlugins({"apps", "viscosity", "screencapture", "safari_bookmarks", "calc", "urls"})
 spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
 spoon.Seal:start()
 
@@ -110,32 +116,16 @@ frameCache = {}
 -- Define window layouts
 --   Format reminder:
 --     {"App name", "Window name", "Display Name", "unitrect", "framerect", "fullframerect"},
-internal_display = {
-    {"IRC",               nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Reeder",            nil,          display_imac, hs.layout.left30,    nil, nil},
-    {"Safari",            nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"OmniFocus",         nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Mail",              nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Airmail",           nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"HipChat",           nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"1Password",         nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Calendar",          nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Messages",          nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"Evernote",          nil,          display_imac, hs.layout.maximized, nil, nil},
-    {"iTunes",            "iTunes",     display_imac, hs.layout.maximized, nil, nil},
-}
-
 dual_display = {
-    {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 3/8, 0.5), nil, nil},
-    {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.95),   nil, nil},
+    {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 0.375, 0.5), nil, nil},
+    {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.5),   nil, nil},
     {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
     {"Kiwi for Gmail",    nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
-    {"OmniFocus",         "RedHat",     display_monitor, hs.geometry.unitrect(3/8, 0, 3/8, 0.5),   nil, nil},
-    {"OmniFocus",         "Forecast",   display_monitor, hs.geometry.unitrect(3/8, 0.5, 3/8, 0.5),   nil, nil},
+    {"Paws for Trello",   nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
     {"Mail",              nil,          display_imac,    hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
-    {"Airmail",           nil,          display_imac,    hs.geometry.unitrect(0, 0, 0.5, 0.5),    nil, nil},
-    {"HipChat",           nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
-    {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 3/8, 0.25), nil, nil},
+    {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 0.375, 0.25), nil, nil},
+    {"Fantastical",       nil,          display_monitor, hs.geometry.unitrect(0.375, 0, 5/8, 0.5), nil, nil},
+    {"Freeter",           nil,          display_monitor, hs.geometry.unitrect(0.375, 0.5, 5/8, 0.5), nil, nil},
 }
 
 -- Helper functions
@@ -199,6 +189,13 @@ function applicationWatcher(appName, eventType, appObject)
         if (appName == "Finder") then
             -- Bring all Finder windows forward when one gets activated
             appObject:selectMenuItem({"Window", "Bring All to Front"})
+        end
+        if streamDeck then
+            local app = hs.application.get(appName)
+            if app then
+                local appIcon = hs.image.imageFromAppBundle(app:bundleID())
+                streamDeck:setButtonImage(5, appIcon)
+            end
         end
     end
 end
@@ -292,24 +289,17 @@ function caffeinateCallback(eventType)
         if officeMotionWatcher then
             officeMotionWatcher:stop()
         end
+    elseif (eventType == hs.caffeinate.watcher.screensDidLock) then
+        streamDeck:setBrightness(0)
+    elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
+        streamDeck:setBrightness(90)
     end
 end
 
 -- Callback function for changes in screen layout
 function screensChangedCallback()
     print("screensChangedCallback")
-    newNumberOfScreens = #hs.screen.allScreens()
-
-    -- FIXME: This is awful if we swap primary screen to the external display. all the windows swap around, pointlessly.
-    if lastNumberOfScreens ~= newNumberOfScreens then
-        if newNumberOfScreens == 1 then
-            hs.layout.apply(internal_display)
-        elseif newNumberOfScreens == 2 then
-            hs.layout.apply(dual_display)
-        end
-    end
-
-    lastNumberOfScreens = newNumberOfScreens
+    --hs.layout.apply(dual_display)
 
     if statuslets then
         statuslets:render()
@@ -327,8 +317,9 @@ function home_arrived()
     hs.applescript.applescript([[
         tell application "Finder"
             try
-                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/Secure"
+                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/borg"
                 mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/Media"
+                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/Secure"
             end try
         end tell
     ]])
@@ -404,7 +395,6 @@ hyperfns['f'] = toggle_window_maximized
 hyperfns['r'] = function() hs.window.focusedWindow():toggleFullScreen() end
 
 -- Hotkeys to trigger defined layouts
-hyperfns['1'] = function() hs.layout.apply(internal_display) end
 hyperfns['2'] = function() hs.layout.apply(dual_display) end
 
 -- Hotkeys to interact with the window grid
@@ -423,7 +413,7 @@ hyperfns['w'] = function() toggle_application("IRC") end
 -- Misc hotkeys
 hyperfns['y'] = hs.toggleConsole
 hyperfns['n'] = function() hs.task.new("/usr/bin/open", nil, {os.getenv("HOME")}):start() end
-hyperfns['Escape'] = toggle_audio_output
+hyperfns['§'] = toggle_audio_output
 hyperfns['m'] = function()
         device = hs.audiodevice.defaultInputDevice()
         device:setMuted(not device:muted())
@@ -498,4 +488,66 @@ hs.notify.new({
 
 --local wfRedshift=hs.window.filter.new({loginwindow={visible=true,allowRoles='*'}},'wf-redshift')
 --hs.redshift.start(2000,'20:00','7:00','3h',false,wfRedshift)
+
+function updateWallpaperFromData(data)
+    local f = io.open("/Users/cmsj/.hammerspoon/wallpaper.png", "w")
+    f:write(data)
+    --hs.fnutils.each(hs.screen.allScreens(), function(screen) screen:screen_desktopImageURL("file:///Users/cmsj/.hammerspoon/wallpaper.png") end)
+end
+
+function fetchNewWallpaper()
+    hs.http.asyncGet("https://api.unsplash.com/photos/random", {Authorization="Client-ID 927e389a0222f70e17988711d2fe665ca82b5c4e8e7caacdb2e17cc515c2eee3"}, function(code,body,headers)
+        if code == 200 then
+            local url = hs.json.decode(body)["urls"]["raw"]
+            print("Fetching image: "..url)
+            hs.http.asyncGet(url, nil, function(code,image,headers)
+                print("Code: "..code)
+                print("Headers: "..hs.inspect(headers))
+                print("Body: "..image)
+                if code == 200 then
+                    updateWallpaperFromData(image)
+                end
+            end)
+        end
+    end)
+end
+
+--rwp_timer = hs.timer.new(600, function() fetchNewWallpaper() end):start()
+
+function deckButtonEvent(deck, button, isDown)
+--    print("deckButtonEvent: "..button.." isDown: "..(isDown and "YES" or "NO"))
+    if button == 11 and not isDown then
+        spoon.StreamDeckMicMuter:toggleMute()
+    elseif isDown then
+        --deck:setButtonColor(button, hs.drawing.color.definedCollections.x11.purple)
+        deck:setButtonImage(button, hs.image.imageFromPath("/Users/cmsj/Desktop/CB0742.06.V1.M1.png"))
+    else
+        deck:setButtonImage(button, hs.image.imageFromName(hs.image.systemImageNames.Folder))
+    end
+    if not isDown then
+        audiodeviceWatchable["event"] = "WTF"
+    end
+end
+
+function streamDeckDiscovery(isConnect, deck)
+    if isConnect then
+        streamDeck = deck
+        streamDeck:reset()
+        streamDeck:buttonCallback(deckButtonEvent)
+        spoon.StreamDeckMicMuter:start(streamDeck, 11)
+    else
+        spoon.StreamDeckMicMuter:stop()
+        streamDeck = nil
+    end
+end
+
+audiodeviceWatchable = hs.watchable.new("audiodevice", true)
+function audiodeviceDeviceCallback(event)
+    audiodeviceWatchable["event"] = event
+end
+hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)
+hs.audiodevice.watcher.start()
+
+hs.loadSpoon("StreamDeckMicMuter")
+hs.streamdeck.init(streamDeckDiscovery)
 

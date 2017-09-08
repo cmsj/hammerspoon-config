@@ -45,7 +45,7 @@ local updateNameMap = function(obj, msg, info)
     end
 end
 
-obj.spotlight = hs.spotlight.new():queryString([[ kMDItemContentType = "com.apple.application-bundle" ]])
+obj.spotlight = hs.spotlight.new():queryString([[ (kMDItemContentType = "com.apple.application-bundle") || (kMDItemContentType = "com.apple.systempreference.prefpane") ]])
                                   :callbackMessages("didUpdate", "inProgress")
                                   :setCallback(updateNameMap)
                                   :searchScopes(obj.appSearchPaths)
@@ -120,6 +120,7 @@ end
 
 function obj.completionCallback(rowInfo)
     if rowInfo["type"] == "launchOrFocus" then
+--        hs.open(rowInfo["path"])
         hs.application.launchOrFocus(rowInfo["path"])
     elseif rowInfo["type"] == "kill" then
         hs.application.get(rowInfo["pid"]):kill()

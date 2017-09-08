@@ -1,0 +1,122 @@
+[
+  {
+    "Constant" : [
+
+    ],
+    "submodules" : [
+
+    ],
+    "Function" : [
+
+    ],
+    "Variable" : [
+      {
+        "desc" : "The number of seconds to wait before fetching a new wallpaper. Defaults to 600 (10 minutes)",
+        "stripped_doc" : [
+          "The number of seconds to wait before fetching a new wallpaper. Defaults to 600 (10 minutes)"
+        ],
+        "name" : "interval",
+        "doc" : "The number of seconds to wait before fetching a new wallpaper. Defaults to 600 (10 minutes)",
+        "notes" : [
+
+        ],
+        "signature" : "RandomWallpaper.interval",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "RandomWallpaper.interval",
+        "parameters" : [
+
+        ]
+      }
+    ],
+    "stripped_doc" : [
+
+    ],
+    "Deprecated" : [
+
+    ],
+    "type" : "Module",
+    "desc" : "Fetch random wallpaper images from Unsplash (http\/\/unsplash.com)",
+    "Constructor" : [
+
+    ],
+    "Field" : [
+
+    ],
+    "items" : [
+      {
+        "desc" : "The number of seconds to wait before fetching a new wallpaper. Defaults to 600 (10 minutes)",
+        "stripped_doc" : [
+          "The number of seconds to wait before fetching a new wallpaper. Defaults to 600 (10 minutes)"
+        ],
+        "name" : "interval",
+        "doc" : "The number of seconds to wait before fetching a new wallpaper. Defaults to 600 (10 minutes)",
+        "notes" : [
+
+        ],
+        "signature" : "RandomWallpaper.interval",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "RandomWallpaper.interval",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Starts the random wallpaper updates",
+        "stripped_doc" : [
+          "Starts the random wallpaper updates",
+          ""
+        ],
+        "name" : "start",
+        "doc" : "Starts the random wallpaper updates\n\nParameters:\n * None\n\nReturns:\n * None",
+        "notes" : [
+
+        ],
+        "signature" : "RandomWallpaper:start()",
+        "type" : "Method",
+        "returns" : [
+          " * None"
+        ],
+        "def" : "RandomWallpaper:start()",
+        "parameters" : [
+          " * None",
+          ""
+        ]
+      }
+    ],
+    "Command" : [
+
+    ],
+    "Method" : [
+      {
+        "desc" : "Starts the random wallpaper updates",
+        "stripped_doc" : [
+          "Starts the random wallpaper updates",
+          ""
+        ],
+        "name" : "start",
+        "doc" : "Starts the random wallpaper updates\n\nParameters:\n * None\n\nReturns:\n * None",
+        "notes" : [
+
+        ],
+        "signature" : "RandomWallpaper:start()",
+        "type" : "Method",
+        "returns" : [
+          " * None"
+        ],
+        "def" : "RandomWallpaper:start()",
+        "parameters" : [
+          " * None",
+          ""
+        ]
+      }
+    ],
+    "doc" : "Fetch random wallpaper images from Unsplash (http\/\/unsplash.com)",
+    "name" : "RandomWallpaper"
+  }
+]
