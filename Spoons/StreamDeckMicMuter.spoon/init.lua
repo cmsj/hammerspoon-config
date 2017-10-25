@@ -34,6 +34,7 @@ end
 
 function obj.audiodeviceDeviceCallback(watcher, path, key, old, new)
     if new == "dev#" then
+        print("Audio devices changed, setting all inputs to: "..(obj.isMuted and "muted" or "unmuted"))
         obj.setAllDeviceState(obj.isMuted)
         watcher:change("event", "") -- Clear the event so we receive this notification again next time
     end

@@ -121,7 +121,7 @@ dual_display = {
     {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.5),   nil, nil},
     {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
     {"Kiwi for Gmail",    nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
-    {"Paws for Trello",   nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
+    {"Trello",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
     {"Mail",              nil,          display_imac,    hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
     {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 0.375, 0.25), nil, nil},
     {"Fantastical",       nil,          display_monitor, hs.geometry.unitrect(0.375, 0, 5/8, 0.5), nil, nil},
@@ -292,7 +292,7 @@ function caffeinateCallback(eventType)
     elseif (eventType == hs.caffeinate.watcher.screensDidLock) then
         streamDeck:setBrightness(0)
     elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
-        streamDeck:setBrightness(90)
+        streamDeck:setBrightness(60)
     end
 end
 
@@ -515,14 +515,14 @@ end
 --rwp_timer = hs.timer.new(600, function() fetchNewWallpaper() end):start()
 
 function deckButtonEvent(deck, button, isDown)
---    print("deckButtonEvent: "..button.." isDown: "..(isDown and "YES" or "NO"))
+    print("deckButtonEvent: "..button.." isDown: "..(isDown and "YES" or "NO"))
     if button == 11 and not isDown then
         spoon.StreamDeckMicMuter:toggleMute()
-    elseif isDown then
-        --deck:setButtonColor(button, hs.drawing.color.definedCollections.x11.purple)
-        deck:setButtonImage(button, hs.image.imageFromPath("/Users/cmsj/Desktop/CB0742.06.V1.M1.png"))
-    else
-        deck:setButtonImage(button, hs.image.imageFromName(hs.image.systemImageNames.Folder))
+--     elseif isDown then
+--         --deck:setButtonColor(button, hs.drawing.color.definedCollections.x11.purple)
+--         deck:setButtonImage(button, hs.image.imageFromPath("/Users/cmsj/Desktop/CB0742.06.V1.M1.png"))
+--     else
+--         deck:setButtonImage(button, hs.image.imageFromName(hs.image.systemImageNames.Folder))
     end
     if not isDown then
         audiodeviceWatchable["event"] = "WTF"
@@ -531,11 +531,13 @@ end
 
 function streamDeckDiscovery(isConnect, deck)
     if isConnect then
+        print("Stream Deck connected: "..tostring(deck))
         streamDeck = deck
         streamDeck:reset()
         streamDeck:buttonCallback(deckButtonEvent)
         spoon.StreamDeckMicMuter:start(streamDeck, 11)
     else
+        print("Stream Deck disconnected")
         spoon.StreamDeckMicMuter:stop()
         streamDeck = nil
     end
