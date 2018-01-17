@@ -33,6 +33,7 @@ function obj.setAllDeviceState(state)
 end
 
 function obj.audiodeviceDeviceCallback(watcher, path, key, old, new)
+    print("audiodevice callback: path:"..path.." key:"..key.." old:"..(old or "nil").." new:"..new)
     if new == "dev#" then
         print("Audio devices changed, setting all inputs to: "..(obj.isMuted and "muted" or "unmuted"))
         obj.setAllDeviceState(obj.isMuted)

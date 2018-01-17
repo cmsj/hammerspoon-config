@@ -545,6 +545,7 @@ end
 
 audiodeviceWatchable = hs.watchable.new("audiodevice", true)
 function audiodeviceDeviceCallback(event)
+    print("audiodeviceDeviceCallback")
     audiodeviceWatchable["event"] = event
 end
 hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)

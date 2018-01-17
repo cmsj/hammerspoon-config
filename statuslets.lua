@@ -104,6 +104,7 @@ end
 function obj.statusletCallbackUpdate(code, stdout, stderr)
     local color
 
+    print("Software update code: "..code)
     if code == 0 then
         color = hs.drawing.color.osx_green
     else
@@ -113,12 +114,13 @@ function obj.statusletCallbackUpdate(code, stdout, stderr)
     obj.updateDot:setFillColor(color)
 end
 
-function obj:update()
-    print("statuslets:update()")
+function obj:update(force)
     hs.task.new("/usr/bin/grep", self.statusletCallbackCCC, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.cccLast"}):start()
     hs.task.new("/usr/bin/grep", self.statusletCallbackArq, {"-q", "Arq.*finished backup", "/var/log/system.log"}):start()
-    if self.updateCounter > 10 then
-        hs.task.new("/Users/cmsj/bin/check_updates.sh", self.statusletCallbackUpdate, {}):start()
+    if force or self.updateCounter > 11 then
+        -- Only do this check about every hour
+        print("Checking software update status...")
+        hs.task.new("/bin/bash", self.statusletCallbackUpdate, {"/Users/cmsj/bin/check_updates.sh"}):start()
         self.updateCounter = 0
     else
         self.updateCounter = self.updateCounter + 1
@@ -130,9 +132,9 @@ end
 function obj:start()
     self:render()
     self.updateCounter = 0
-    self.timer = hs.timer.new(hs.timer.minutes(5), function(obj) obj:update() end)
+    self.timer = hs.timer.new(hs.timer.minutes(5), function() obj:update() end)
     self.timer:start()
-    self:update()
+    self:update(true)
     return self
 end
 
