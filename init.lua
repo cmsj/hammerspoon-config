@@ -317,9 +317,8 @@ function home_arrived()
     hs.applescript.applescript([[
         tell application "Finder"
             try
-                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/borg"
-                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/Media"
-                mount volume "afp://admin@fairukipa._afpovertcp._tcp.local/Secure"
+                mount volume "smb://smbarchive@gnubert.local/media"
+                mount volume "smb://smbarchive@gnubert.local/archive"
             end try
         end tell
     ]])
