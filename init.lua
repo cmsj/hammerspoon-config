@@ -313,7 +313,7 @@ function home_arrived()
     -- cmsj ALL=(root) NOPASSWD: /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall *
     hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "off"})
 
-    -- Mount my mac mini's DAS
+    -- Mount my NAS
     hs.applescript.applescript([[
         tell application "Finder"
             try
@@ -411,6 +411,7 @@ hyperfns['w'] = function() toggle_application("IRC") end
 
 -- Misc hotkeys
 hyperfns['y'] = hs.toggleConsole
+hyperfns['h'] = hs.hints.windowHints
 hyperfns['n'] = function() hs.task.new("/usr/bin/open", nil, {os.getenv("HOME")}):start() end
 hyperfns['§'] = toggle_audio_output
 hyperfns['m'] = function()
@@ -544,7 +545,12 @@ end
 
 audiodeviceWatchable = hs.watchable.new("audiodevice", true)
 function audiodeviceDeviceCallback(event)
-    print("audiodeviceDeviceCallback")
+    print("audiodeviceDeviceCallback: "..event)
+    -- Force the internal mic to always remain the default input device
+    if event == "dIn " then
+        print("Forcing default input to Internal Microphone")
+        hs.timer.doAfter(2, function() hs.audiodevice.findInputByName("Built-in Microphone"):setDefaultInputDevice() end)
+    end
     audiodeviceWatchable["event"] = event
 end
 hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)
