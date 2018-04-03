@@ -101,7 +101,7 @@ end
 --- Returns:
 ---  * The StreamDeckMicMuter object
 function obj:stop()
-    self.audiodeviceWatcher.release()
+    self.audiodeviceWatcher:release()
     return self
 end
 
