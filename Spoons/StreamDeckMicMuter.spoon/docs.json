@@ -15,158 +15,26 @@
     "stripped_doc" : [
 
     ],
+    "type" : "Module",
     "desc" : "Sets up a button on an Elgato Stream Deck to mute\/unmute all mics",
     "Deprecated" : [
 
     ],
-    "type" : "Module",
     "Constructor" : [
-
-    ],
-    "doc" : "Sets up a button on an Elgato Stream Deck to mute\/unmute all mics\n\nNotes:\n * This Spoon uses hs.audiodevice.watcherCallback which means it will conflict with any other Spoons that also use that callback, or your init.lua if you use it there. If this is a problem, please file a bug",
-    "Method" : [
-      {
-        "doc" : "Starts StreamDeckMicMuter\n\nParameters:\n * deck - An hs.streamdeck object\n * button - A number from 1 to 15 representing the button to use\n * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)\n\nReturns:\n * The StreamDeckMicMuter object\n\nNotes:\n * This Spoon relies on hs.audiodevice.watcher to track any changes in audiodevices attached to the system, however, only one callback can be attached to hs.audiodevice.watcher, so rather than try and claim exclusive use of it, we expect you to create an hs.watchable proxy in your init.lua, like this:\n  ```lua\n  audiodeviceWatchable = hs.watchable.new(\"audiodevice\")\n  function audiodeviceDeviceCallback(event)\n    audiodeviceWatchable[\"event\"] = event\n  end\n  hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)\n  hs.audiodevice.watcher.start()\n  ```",
-        "stripped_doc" : [
-          "Starts StreamDeckMicMuter",
-          ""
-        ],
-        "def" : "StreamDeckMicMuter:start(deck, button)",
-        "parameters" : [
-          " * deck - An hs.streamdeck object",
-          " * button - A number from 1 to 15 representing the button to use",
-          " * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)",
-          ""
-        ],
-        "notes" : [
-          " * This Spoon relies on hs.audiodevice.watcher to track any changes in audiodevices attached to the system, however, only one callback can be attached to hs.audiodevice.watcher, so rather than try and claim exclusive use of it, we expect you to create an hs.watchable proxy in your init.lua, like this:",
-          "  ```lua",
-          "  audiodeviceWatchable = hs.watchable.new(\"audiodevice\")",
-          "  function audiodeviceDeviceCallback(event)",
-          "    audiodeviceWatchable[\"event\"] = event",
-          "  end",
-          "  hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)",
-          "  hs.audiodevice.watcher.start()",
-          "  ```"
-        ],
-        "signature" : "StreamDeckMicMuter:start(deck, button)",
-        "type" : "Method",
-        "returns" : [
-          " * The StreamDeckMicMuter object",
-          ""
-        ],
-        "name" : "start",
-        "desc" : "Starts StreamDeckMicMuter"
-      },
-      {
-        "doc" : "Stops StreamDeckMicMuter\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
-        "stripped_doc" : [
-          "Stops StreamDeckMicMuter",
-          ""
-        ],
-        "def" : "StreamDeckMicMuter:stop()",
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "notes" : [
-
-        ],
-        "signature" : "StreamDeckMicMuter:stop()",
-        "type" : "Method",
-        "returns" : [
-          " * The StreamDeckMicMuter object"
-        ],
-        "name" : "stop",
-        "desc" : "Stops StreamDeckMicMuter"
-      },
-      {
-        "doc" : "Sets the mute\/unmute state\n\nParameters:\n * shouldMute - A boolean, true to set mute state, false to unmute\n\nReturns:\n * The StreamDeckMicMuter object",
-        "stripped_doc" : [
-          "Sets the mute\/unmute state",
-          ""
-        ],
-        "def" : "StreamDeckMicMuter:setMute(shouldMute)",
-        "parameters" : [
-          " * shouldMute - A boolean, true to set mute state, false to unmute",
-          ""
-        ],
-        "notes" : [
-
-        ],
-        "signature" : "StreamDeckMicMuter:setMute(shouldMute)",
-        "type" : "Method",
-        "returns" : [
-          " * The StreamDeckMicMuter object"
-        ],
-        "name" : "setMute",
-        "desc" : "Sets the mute\/unmute state"
-      },
-      {
-        "doc" : "Toggles the current mute state\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
-        "stripped_doc" : [
-          "Toggles the current mute state",
-          ""
-        ],
-        "def" : "StreamDeckMicMuter:toggleMute()",
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "notes" : [
-
-        ],
-        "signature" : "StreamDeckMicMuter:toggleMute()",
-        "type" : "Method",
-        "returns" : [
-          " * The StreamDeckMicMuter object"
-        ],
-        "name" : "toggleMute",
-        "desc" : "Toggles the current mute state"
-      }
-    ],
-    "Command" : [
 
     ],
     "Field" : [
 
     ],
-    "items" : [
+    "Method" : [
       {
-        "doc" : "Sets the mute\/unmute state\n\nParameters:\n * shouldMute - A boolean, true to set mute state, false to unmute\n\nReturns:\n * The StreamDeckMicMuter object",
-        "stripped_doc" : [
-          "Sets the mute\/unmute state",
-          ""
-        ],
-        "def" : "StreamDeckMicMuter:setMute(shouldMute)",
-        "parameters" : [
-          " * shouldMute - A boolean, true to set mute state, false to unmute",
-          ""
-        ],
-        "notes" : [
-
-        ],
-        "signature" : "StreamDeckMicMuter:setMute(shouldMute)",
-        "type" : "Method",
-        "returns" : [
-          " * The StreamDeckMicMuter object"
-        ],
-        "name" : "setMute",
-        "desc" : "Sets the mute\/unmute state"
-      },
-      {
-        "doc" : "Starts StreamDeckMicMuter\n\nParameters:\n * deck - An hs.streamdeck object\n * button - A number from 1 to 15 representing the button to use\n * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)\n\nReturns:\n * The StreamDeckMicMuter object\n\nNotes:\n * This Spoon relies on hs.audiodevice.watcher to track any changes in audiodevices attached to the system, however, only one callback can be attached to hs.audiodevice.watcher, so rather than try and claim exclusive use of it, we expect you to create an hs.watchable proxy in your init.lua, like this:\n  ```lua\n  audiodeviceWatchable = hs.watchable.new(\"audiodevice\")\n  function audiodeviceDeviceCallback(event)\n    audiodeviceWatchable[\"event\"] = event\n  end\n  hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)\n  hs.audiodevice.watcher.start()\n  ```",
+        "def" : "StreamDeckMicMuter:start(deck, button)",
         "stripped_doc" : [
           "Starts StreamDeckMicMuter",
           ""
         ],
-        "def" : "StreamDeckMicMuter:start(deck, button)",
-        "parameters" : [
-          " * deck - An hs.streamdeck object",
-          " * button - A number from 1 to 15 representing the button to use",
-          " * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)",
-          ""
-        ],
+        "desc" : "Starts StreamDeckMicMuter",
+        "doc" : "Starts StreamDeckMicMuter\n\nParameters:\n * deck - An hs.streamdeck object\n * button - A number from 1 to 15 representing the button to use\n * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)\n\nReturns:\n * The StreamDeckMicMuter object\n\nNotes:\n * This Spoon relies on hs.audiodevice.watcher to track any changes in audiodevices attached to the system, however, only one callback can be attached to hs.audiodevice.watcher, so rather than try and claim exclusive use of it, we expect you to create an hs.watchable proxy in your init.lua, like this:\n  ```lua\n  audiodeviceWatchable = hs.watchable.new(\"audiodevice\")\n  function audiodeviceDeviceCallback(event)\n    audiodeviceWatchable[\"event\"] = event\n  end\n  hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)\n  hs.audiodevice.watcher.start()\n  ```",
         "notes" : [
           " * This Spoon relies on hs.audiodevice.watcher to track any changes in audiodevices attached to the system, however, only one callback can be attached to hs.audiodevice.watcher, so rather than try and claim exclusive use of it, we expect you to create an hs.watchable proxy in your init.lua, like this:",
           "  ```lua",
@@ -185,19 +53,21 @@
           ""
         ],
         "name" : "start",
-        "desc" : "Starts StreamDeckMicMuter"
+        "parameters" : [
+          " * deck - An hs.streamdeck object",
+          " * button - A number from 1 to 15 representing the button to use",
+          " * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)",
+          ""
+        ]
       },
       {
-        "doc" : "Stops StreamDeckMicMuter\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
+        "def" : "StreamDeckMicMuter:stop()",
         "stripped_doc" : [
           "Stops StreamDeckMicMuter",
           ""
         ],
-        "def" : "StreamDeckMicMuter:stop()",
-        "parameters" : [
-          " * None",
-          ""
-        ],
+        "desc" : "Stops StreamDeckMicMuter",
+        "doc" : "Stops StreamDeckMicMuter\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
         "notes" : [
 
         ],
@@ -207,19 +77,41 @@
           " * The StreamDeckMicMuter object"
         ],
         "name" : "stop",
-        "desc" : "Stops StreamDeckMicMuter"
+        "parameters" : [
+          " * None",
+          ""
+        ]
       },
       {
-        "doc" : "Toggles the current mute state\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
+        "def" : "StreamDeckMicMuter:setMute(shouldMute)",
+        "stripped_doc" : [
+          "Sets the mute\/unmute state",
+          ""
+        ],
+        "desc" : "Sets the mute\/unmute state",
+        "doc" : "Sets the mute\/unmute state\n\nParameters:\n * shouldMute - A boolean, true to set mute state, false to unmute\n\nReturns:\n * The StreamDeckMicMuter object",
+        "notes" : [
+
+        ],
+        "signature" : "StreamDeckMicMuter:setMute(shouldMute)",
+        "type" : "Method",
+        "returns" : [
+          " * The StreamDeckMicMuter object"
+        ],
+        "name" : "setMute",
+        "parameters" : [
+          " * shouldMute - A boolean, true to set mute state, false to unmute",
+          ""
+        ]
+      },
+      {
+        "def" : "StreamDeckMicMuter:toggleMute()",
         "stripped_doc" : [
           "Toggles the current mute state",
           ""
         ],
-        "def" : "StreamDeckMicMuter:toggleMute()",
-        "parameters" : [
-          " * None",
-          ""
-        ],
+        "desc" : "Toggles the current mute state",
+        "doc" : "Toggles the current mute state\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
         "notes" : [
 
         ],
@@ -229,9 +121,117 @@
           " * The StreamDeckMicMuter object"
         ],
         "name" : "toggleMute",
-        "desc" : "Toggles the current mute state"
+        "parameters" : [
+          " * None",
+          ""
+        ]
       }
     ],
+    "Command" : [
+
+    ],
+    "items" : [
+      {
+        "def" : "StreamDeckMicMuter:setMute(shouldMute)",
+        "stripped_doc" : [
+          "Sets the mute\/unmute state",
+          ""
+        ],
+        "desc" : "Sets the mute\/unmute state",
+        "doc" : "Sets the mute\/unmute state\n\nParameters:\n * shouldMute - A boolean, true to set mute state, false to unmute\n\nReturns:\n * The StreamDeckMicMuter object",
+        "notes" : [
+
+        ],
+        "signature" : "StreamDeckMicMuter:setMute(shouldMute)",
+        "type" : "Method",
+        "returns" : [
+          " * The StreamDeckMicMuter object"
+        ],
+        "name" : "setMute",
+        "parameters" : [
+          " * shouldMute - A boolean, true to set mute state, false to unmute",
+          ""
+        ]
+      },
+      {
+        "def" : "StreamDeckMicMuter:start(deck, button)",
+        "stripped_doc" : [
+          "Starts StreamDeckMicMuter",
+          ""
+        ],
+        "desc" : "Starts StreamDeckMicMuter",
+        "doc" : "Starts StreamDeckMicMuter\n\nParameters:\n * deck - An hs.streamdeck object\n * button - A number from 1 to 15 representing the button to use\n * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)\n\nReturns:\n * The StreamDeckMicMuter object\n\nNotes:\n * This Spoon relies on hs.audiodevice.watcher to track any changes in audiodevices attached to the system, however, only one callback can be attached to hs.audiodevice.watcher, so rather than try and claim exclusive use of it, we expect you to create an hs.watchable proxy in your init.lua, like this:\n  ```lua\n  audiodeviceWatchable = hs.watchable.new(\"audiodevice\")\n  function audiodeviceDeviceCallback(event)\n    audiodeviceWatchable[\"event\"] = event\n  end\n  hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)\n  hs.audiodevice.watcher.start()\n  ```",
+        "notes" : [
+          " * This Spoon relies on hs.audiodevice.watcher to track any changes in audiodevices attached to the system, however, only one callback can be attached to hs.audiodevice.watcher, so rather than try and claim exclusive use of it, we expect you to create an hs.watchable proxy in your init.lua, like this:",
+          "  ```lua",
+          "  audiodeviceWatchable = hs.watchable.new(\"audiodevice\")",
+          "  function audiodeviceDeviceCallback(event)",
+          "    audiodeviceWatchable[\"event\"] = event",
+          "  end",
+          "  hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)",
+          "  hs.audiodevice.watcher.start()",
+          "  ```"
+        ],
+        "signature" : "StreamDeckMicMuter:start(deck, button)",
+        "type" : "Method",
+        "returns" : [
+          " * The StreamDeckMicMuter object",
+          ""
+        ],
+        "name" : "start",
+        "parameters" : [
+          " * deck - An hs.streamdeck object",
+          " * button - A number from 1 to 15 representing the button to use",
+          " * state - An optional boolean, true to start muted, false to start unmuted (Defaults to true)",
+          ""
+        ]
+      },
+      {
+        "def" : "StreamDeckMicMuter:stop()",
+        "stripped_doc" : [
+          "Stops StreamDeckMicMuter",
+          ""
+        ],
+        "desc" : "Stops StreamDeckMicMuter",
+        "doc" : "Stops StreamDeckMicMuter\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
+        "notes" : [
+
+        ],
+        "signature" : "StreamDeckMicMuter:stop()",
+        "type" : "Method",
+        "returns" : [
+          " * The StreamDeckMicMuter object"
+        ],
+        "name" : "stop",
+        "parameters" : [
+          " * None",
+          ""
+        ]
+      },
+      {
+        "def" : "StreamDeckMicMuter:toggleMute()",
+        "stripped_doc" : [
+          "Toggles the current mute state",
+          ""
+        ],
+        "desc" : "Toggles the current mute state",
+        "doc" : "Toggles the current mute state\n\nParameters:\n * None\n\nReturns:\n * The StreamDeckMicMuter object",
+        "notes" : [
+
+        ],
+        "signature" : "StreamDeckMicMuter:toggleMute()",
+        "type" : "Method",
+        "returns" : [
+          " * The StreamDeckMicMuter object"
+        ],
+        "name" : "toggleMute",
+        "parameters" : [
+          " * None",
+          ""
+        ]
+      }
+    ],
+    "doc" : "Sets up a button on an Elgato Stream Deck to mute\/unmute all mics\n\nNotes:\n * This Spoon uses hs.audiodevice.watcherCallback which means it will conflict with any other Spoons that also use that callback, or your init.lua if you use it there. If this is a problem, please file a bug",
     "name" : "StreamDeckMicMuter"
   }
 ]
