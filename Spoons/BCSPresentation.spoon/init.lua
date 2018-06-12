@@ -56,6 +56,12 @@ obj.currentSlide = 0
 -- Storage for transient screen objects
 obj.refs = {}
 
+function obj.setDefaultFontSizes()
+    obj.slideHeaderSize = obj.screenFrame["h"] / 15
+    obj.slideBodySize   = obj.screenFrame["h"] / 22
+    obj.slideFooterSize = obj.screenFrame["h"] / 30
+end
+
 function obj.get_right_frame(percent)
     local factor = percent/100
     local fakeBodyFrame = obj.get_body_frame(obj.screenFrame, 100)
@@ -155,7 +161,7 @@ obj.slides = {
  • My name is Chris Jones
    • Working on OpenStack for Red Hat
    • cmsj@tenshu.net
-   • @cmsj on GitHub/Twitter/etc.
+   • @cmsj on GitHub/Twitter/etc
    • Ng on IRC
  • Do we have any Mac users present?
    (this could be very boring if not!)]],
@@ -178,45 +184,30 @@ obj.slides = {
  • 1991 - Apple Events (System 7)
    • Foundation of much of what comes later
  • 1993 - AppleScript (System 7.1.1)
-   • Becomes de-rigeur for apps
+   • Now expected that apps are scriptable
  • 2005 - Automator (OS X 10.4)
    • User applications, Folder Actions, System Services
  • 2007 - ScriptingBridge (OS X 10.5)
    • AppleScript power for Objective C, JavaScript, Python and Ruby
  • 1991 onwards - Third Parties
    • AppleScript libraries
-   • Many small utilities
-   • Keyboard Maestro]]
-    },
-    {
-        ["header"] = "Apple Events",
-        ["enterFn"] = function()
-            obj.makecodeview(obj.slideView, "appleEventsCodeView", "righthalf", [[typedef FourCharCode DescType;
-typedef struct OpaqueAEDataStorageType*  AEDataStorage;
-
-struct AEDesc {
-  DescType            descriptorType;
-  AEDataStorage       dataHandle;
-};]])
-        end,
-        ["body"] = [[Very simple type:
- • Four character code (e.g. "appa" to pass app launch arguments)
- • Opaque pointer to arbitrary data
- • AppleScript is built on Apple Events:
-   • High level messages built on Events
-]],
-        ["bodyWidth"] = 50
+   • Many automation/customisation utilities]]
     },
     {
         ["header"] = "AppleScript",
         ["enterFn"] = function()
             obj.makecodeview(obj.slideView, "appleScriptCodeView", "righthalf", [[tell application "Hammerspoon"
   execute lua code "hs.reload()"
-end tell]])
+end tell
+    tell application "Safari"
+        set currentURL to URL of document 1
+    end tell
+    return currentURL]])
         end,
         ["bodyWidth"] = 50,
-        ["body"] = [[ • Supposedly simple, natural language.
- • Very powerful despite its awful syntax.
+        ["body"] = [[ • Supposedly simple, natural language
+ • Very powerful despite its awful syntax
+ • High level messages passed to apps via Apple Events
  • Apps can expose object hierarchies (e.g. a browser can expose page elements within tabs within windows)]]
     },
     {
@@ -239,43 +230,45 @@ end tell]])
 }
 @end]])
         end,
-        ["body"] = [[ • Application defines the commands it accepts (in this case "executeLua") in an XML "dictionary".
- • Commands are mapped to Objective C interfaces (like protocols/traits in other languages).
- • Foundation.framework calls the implementation method of the relevant interface.
+        ["body"] = [[ • Application defines the commands it accepts (in this case "executeLua") in an XML "dictionary"
+ • Commands are mapped to Objective C interfaces (like protocols/traits in other languages)
+ • Foundation.framework calls the implementation method of the relevant interface
  • Dictionaries can be browsed by the user using Script Editor.app]],
         ["bodyWidth"] = 50
     },
     {
-        ["header"] = "Keyboard Maestro",
+        ["header"] = "How Hammerspoon came to exist: Motivation",
         ["enterFn"] = function()
             obj.makeimageview(obj.slideView, "keyboardMaestro", "righthalf", "keyboardmaestro.png")
         end,
         ["bodyWidth"] = 50,
-        ["body"] = [[ • Graphical programming, like Automator.
- • Arguably the peak of third party macOS automation.
- • Runs as a daemon.
- • Reacts to many events.
- • Ideal for non-programmer power users.
- • Scales poorly with macro complexity.
- • Not open source.]]
+        ["body"] = [[ • I was using Keyboard Maestro to automate tasks
+ • Very powerful, can react to lots of system events
+ • Ideal for non-programmer power users
+ • As a programmer, became frustrated with graphical programming
+ • Not open source]]
     },
     {
-        ["header"] = "History",
-        ["body"] = [[Hammerspoon is a fork of Mjolnir by Steven Degutis. Mjolnir aims to be a very minimal application, with its extensions hosted externally and managed using a Lua package manager. We wanted to provide a more integrated experience.]]
+        ["header"] = "How Hammerspoon came to exist: Circumstance",
+        ["body"] = [[ • Others also wanted something programmable
+ • First notable app was Slate (used JavaScript)
+   • Quickly went unmaintained, never really recovered
+ • Steven Degutis began a series of open source experiments
+   • Hydra, Phoenix, Penknife (used various languages)
+ • Culminated in Mjolnir, simple bridge between Lua and OS X]]
     },
     {
-        ["header"] = "A comparison",
-        ["enterFn"] = function()
-            local webview = obj.makewebview("comparisonSlideWebview", "body", "https://github.com/sdegutis/mjolnir#mjolnir-vs-other-apps", nil)
-            webview:show(0.3)
-        end,
-        ["exitFn"] = function()
-            local webview = obj.refs["comparisonSlideWebview"]
-            webview:hide(0.2)
-        end,
+        ["header"] = "How Hammerspoon came to exist: The Fork",
+        ["body"] = [[ • Steven wanted to keep Mjolnir small and pure
+ • It didn't ship with any OS integrations
+ • They were supposed to be distributed separately
+ • Small group of us disagreed and decided to fork in October 2014
+ • Aim was a "batteries included" automation app
+ • Started with ~15000 lines of code (13000 being Lua 5.2.3, 500 being integrations)
+ • Now have ~100000 lines of code (15000 being Lua 5.3.4, 37500 being integrations)]]
     },
     {
-        ["header"] = "So what is it for",
+        ["header"] = "So what can it do?",
         ["body"] = [[• Window management
 • Reacting to all kinds of events
   • WiFi, USB, path/file changes
@@ -384,7 +377,7 @@ function obj:renderSlide(slideNum)
                                       text=("Hammerspoon: Staggeringly powerful macOS desktop automation"),
                                       textColor=hs.drawing.color.x11.black,
                                       textSize=self.slideFooterSize })
-      self.slideView:show(0.2)
+      self.slideView:show(1.2)
       self.numDefaultElements = self.slideView:elementCount()
     end
 
@@ -456,24 +449,53 @@ function obj:previousSlide()
     end
 end
 
+-- Update the current slide
+function obj:updateSlide()
+    self:renderSlide()
+    if self.slides[self.currentSlide] and self.slides[self.currentSlide]["enterFn"] then
+        print("running enterFn for slide")
+        self.slides[self.currentSlide]["enterFn"]()
+    end
+end
+
+-- Change font sizes
+function obj:resizeFonts(delta)
+    self.slideHeaderSize = self.slideHeaderSize + delta
+    self.slideBodySize = self.slideBodySize + delta
+    self.slideFooterSize = self.slideFooterSize + delta
+end
+
+-- Increase font size
+function obj:fontBigger()
+    self:resizeFonts(1)
+    self:updateSlide()
+end
+
+-- Decrease font size
+function obj:fontSmaller()
+    self:resizeFonts(-1)
+    self:updateSlide()
+end
+
 -- Exit the presentation
 function obj:endPresentation()
     hs.caffeinate.set("displayIdle", false, true)
+
     if self.slides[self.currentSlide] and self.slides[self.currentSlide]["exitFn"] then
         print("running exitFn for slide")
         self.slides[self.currentSlide]["exitFn"]()
     end
-    self.slideView:hide(0.5)
 
-    hs.timer.doAfter(1, function()
-        self.slideView:delete()
-        self.slideView = nil
-        self.refs = {}
-    end)
+    obj.slideView:delete(1.2)
+    obj.slideView = nil
+    obj.refs = {}
 
-    hs.caffeinate.set("displayIdle", false, true)
-    self.slideModal:delete()
-    self.currentSlide = 0
+    if obj.slideModal.delete then
+        obj.slideModal:delete() -- FIXME: This isn't in the current release of Hammerspoon
+    end
+    obj.slideModal = nil
+
+    obj.currentSlide = 0
 end
 
 -- Prepare the modal hotkeys for the presentation
@@ -484,6 +506,9 @@ function obj.setupModal()
     obj.slideModal:bind({}, "left", function() obj:previousSlide() end)
     obj.slideModal:bind({}, "right", function() obj:nextSlide() end)
     obj.slideModal:bind({}, "escape", function() obj:endPresentation() end)
+    obj.slideModal:bind({}, "=", function() obj:fontBigger() end)
+    obj.slideModal:bind({}, "-", function() obj:fontSmaller() end)
+    obj.slideModal:bind({}, "0", function() obj:setDefaultFontSizes() obj:updateSlide() end)
 
     obj.slideModal:enter()
 end
@@ -504,14 +529,12 @@ function obj.didChooseScreen(choice)
     end
     obj.screenFrame = obj.presentationScreen:fullFrame()
 
-    -- DEBUG
+    -- DEBUG OVERRIDE TO 1080p
     obj.screenFrame = hs.geometry.rect(0, 0, 1920, 1080)
 
     obj.setupModal()
 
-    obj.slideHeaderSize = obj.screenFrame["h"] / 15
-    obj.slideBodySize   = obj.screenFrame["h"] / 22
-    obj.slideFooterSize = obj.screenFrame["h"] / 30
+    obj.setDefaultFontSizes()
 
     obj:nextSlide()
 end
