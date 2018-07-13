@@ -561,11 +561,11 @@ hs.audiodevice.watcher.start()
 hs.loadSpoon("StreamDeckMicMuter")
 hs.streamdeck.init(streamDeckDiscovery)
 
-krbRefresherTimer = hs.timer.doAfter(7200, function()
+krbRefresherTimer = hs.timer.doEvery(7200, function()
     if krbRefresherTask and krbRefresherTask:isRunning() then
         print("Terminating existing kinit process (which shouldn't be running)")
         krbRefresherTask:terminate()
     end
     print("Refreshing krb tickets. Will refresh again in 2 hours")
-    krbRefresherTask = hs.task.new("/usr/bin/kinit", {"-R"}):start()
+    krbRefresherTask = hs.task.new("/usr/bin/kinit", nil, {"-R"}):start()
 end)
