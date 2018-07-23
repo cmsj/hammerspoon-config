@@ -52,25 +52,19 @@ function obj.choicesBareURL(query)
 end
 
 function obj.choicesURLPart(query)
+    print("choicesURLPart for: "..query)
     local choices = {}
     for name,data in pairs(obj.providers) do
-        local query_provider = string.sub(query, 1, string.len(name))
-        if string.match(query_provider:lower(), name:lower()) then
-            local query_without_provider = string.gsub(string.sub(query, string.len(query_provider) + 1, -1), "^%s*(.-)%s*$", "%1")
-            if query_without_provider ~= "" then
-                local full_url = string.format(data["url"], query_without_provider)
-                local url_scheme = string.sub(full_url, 1, string.find(full_url, "://") - 1)
-                print("Scheme: "..url_scheme)
-                local choice = {}
-                choice["text"] = data["name"]
-                choice["subText"] = full_url
-                choice["plugin"] = obj.__name
-                choice["type"] = "launch"
-                choice["url"] = full_url
-                choice["scheme"] = url_scheme
-                table.insert(choices, choice)
-            end
-        end
+        local full_url = string.format(data["url"], query)
+        local url_scheme = string.sub(full_url, 1, string.find(full_url, "://") - 1)
+        local choice = {}
+        choice["text"] = data["name"]
+        choice["subText"] = full_url
+        choice["plugin"] = obj.__name
+        choice["type"] = "launch"
+        choice["url"] = full_url
+        choice["scheme"] = url_scheme
+        table.insert(choices, choice)
     end
     return choices
 end
