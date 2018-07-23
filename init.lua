@@ -49,7 +49,7 @@ krbRefresherTask = nil
 
 -- Load Seal - This is a pretty simple implementation of something like Alfred
 hs.loadSpoon("Seal")
-spoon.Seal:loadPlugins({"apps", "viscosity", "screencapture", "safari_bookmarks", "calc", "urls"})
+spoon.Seal:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "urls"})
 spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
 spoon.Seal:start()
 

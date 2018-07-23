@@ -1,6 +1,16 @@
 --- === Seal ===
 ---
 --- Pluggable launch bar
+---
+--- Download: [https://github.com/Hammerspoon/Spoons/raw/master/Spoons/Seal.spoon.zip](https://github.com/Hammerspoon/Spoons/raw/master/Spoons/Seal.spoon.zip)
+---
+--- Seal includes a number of plugins, which you can choose to load (see `:loadPlugins()` below):
+---  * apps : Launch applications by name
+---  * safari_bookmarks : Open Safari bookmarks (this is broken since at least High Sierra)
+---  * calc : Simple calculator
+---  * vpn : Connect and disconnect VPNs (currently supports Viscosity and macOS system preferences)A
+---  * useractions : User defined custom actions
+---  * screencapture : Lets you take screenshots in various ways
 
 local obj = {}
 obj.__index = obj
@@ -14,16 +24,89 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 obj.chooser = nil
 obj.hotkeyShow = nil
+obj.hotkeyToggle = nil
 obj.plugins = {}
 obj.commands = {}
 obj.queryChangedTimer = nil
 
--- Internal function used to find our location, so we know where to load plugins from
-local function script_path()
-    local str = debug.getinfo(2, "S").source:sub(2)
-    return str:match("(.*/)")
+obj.spoonPath = hs.spoons.scriptPath()
+
+--- Seal.plugin_search_paths
+--- Variable
+--- List of directories where Seal will look for plugins. Defaults to `~/.hammerspoon/seal_plugins/` and the Seal Spoon directory.
+obj.plugin_search_paths = { hs.configdir .. "/seal_plugins", obj.spoonPath }
+
+--- Seal:refreshCommandsForPlugin(plugin_name)
+--- Method
+--- Refresh the list of commands provided by the given plugin.
+---
+--- Parameters:
+---  * plugin_name - the name of the plugin. Should be the name as passed to `loadPlugins()` or `loadPluginFromFile`.
+---
+--- Returns:
+---  * The Seal object
+---
+--- Notes:
+---  * Most Seal plugins expose a static list of commands (if any), which are registered at the time the plugin is loaded. This method is used for plugins which expose a dynamic or changing (e.g. depending on configuration) list of commands.
+function obj:refreshCommandsForPlugin(plugin_name)
+   plugin = self.plugins[plugin_name]
+   if plugin.commands then
+      for cmd,cmdInfo in pairs(plugin:commands()) do
+         if not self.commands[cmd] then
+            print("-- Adding Seal command: "..cmd)
+            self.commands[cmd] = cmdInfo
+         end
+      end
+   end
+   return self
 end
-obj.spoonPath = script_path()
+
+--- Seal:refreshAllCommands()
+--- Method
+--- Refresh the list of commands provided by all the currently loaded plugins.
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * The Seal object
+---
+--- Notes:
+---  * Most Seal plugins expose a static list of commands (if any), which are registered at the time the plugin is loaded. This method is used for plugins which expose a dynamic or changing (e.g. depending on configuration) list of commands.
+function obj:refreshAllCommands()
+   for p, _ in pairs(self.plugins) do
+      self:refreshCommandsForPlugin(p)
+   end
+   return self
+end
+
+--- Seal:loadPluginFromFile(plugin_name, file)
+--- Method
+--- Loads a plugin from a given file
+---
+--- Parameters:
+---  * plugin_name - the name of the plugin, without "seal_" at the beginning or ".lua" at the end
+---  * file - the file where the plugin code is stored.
+---
+--- Returns:
+---  * The Seal object if the plugin was successfully loaded, `nil` otherwise
+---
+--- Notes:
+---  * You should normally use `Seal:loadPlugins()`. This method allows you to load plugins
+---    from non-standard locations and is mostly a development interface.
+---  * Some plugins may immediately begin doing background work (e.g. Spotlight searches)
+function obj:loadPluginFromFile(plugin_name, file)
+   local f,err = loadfile(file)
+   if f~= nil then
+      local plugin = f()
+      plugin.seal = self
+      self.plugins[plugin_name] = plugin
+      self:refreshCommandsForPlugin(plugin_name)
+      return self
+   else
+      return nil
+   end
+end
 
 --- Seal:loadPlugins(plugins)
 --- Method
@@ -45,14 +128,17 @@ function obj:loadPlugins(plugins)
     self.chooser:queryChangedCallback(self.queryChangedCallback)
 
     for k,plugin_name in pairs(plugins) do
-        print("-- Loading Seal plugin: " .. plugin_name)
-        plugin = dofile(self.spoonPath.."/seal_"..plugin_name..".lua")
-        plugin.seal = self
-        table.insert(obj.plugins, plugin)
-        for cmd,cmdInfo in pairs(plugin:commands()) do
-            print("-- Adding Seal command: "..cmd)
-            obj.commands[cmd] = cmdInfo
-        end
+       local loaded=nil
+       print("-- Loading Seal plugin: " .. plugin_name)
+       for _,dir in ipairs(self.plugin_search_paths) do
+          if obj.plugins[plugin_name] == nil then
+             local file = dir .. "/seal_" .. plugin_name .. ".lua"
+             loaded = (self:loadPluginFromFile(plugin_name, file) ~= nil)
+          end
+       end
+       if (not loaded) then
+          hs.showError(string.format("Error: could not find Seal plugin %s in any of the load paths %s", plugin_name, hs.inspect(self.plugin_search_paths)))
+       end
     end
     return self
 end
@@ -62,8 +148,9 @@ end
 --- Binds hotkeys for Seal
 ---
 --- Parameters:
----  * mapping - A table containing hotkey modifier/key details for the following items:
+---  * mapping - A table containing hotkey modifier/key details for the following (optional) items:
 ---   * show - This will cause Seal's UI to be shown
+---   * toggle - This will cause Seal's UI to be shown or hidden depending on its current state
 ---
 --- Returns:
 ---  * The Seal object
@@ -71,9 +158,20 @@ function obj:bindHotkeys(mapping)
     if (self.hotkeyShow) then
         self.hotkeyShow:delete()
     end
-    local showMods = mapping["show"][1]
-    local showKey = mapping["show"][2]
-    self.hotkeyShow = hs.hotkey.new(showMods, showKey, function() self:show() end)
+    if (self.hotkeyToggle) then
+        self.hotkeyToggle:delete()
+    end
+
+    if mapping["show"] ~= nil then
+        local showMods = mapping["show"][1]
+        local showKey = mapping["show"][2]
+        self.hotkeyShow = hs.hotkey.new(showMods, showKey, function() self:show() end)
+    end
+    if mapping["toggle"] ~= nil then
+        local toggleMods = mapping["toggle"][1]
+        local toggleKey = mapping["toggle"][2]
+        self.hotkeyToggle = hs.hotkey.new(toggleMods, toggleKey, function() self:toggle() end)
+    end
 
     return self
 end
@@ -91,6 +189,9 @@ function obj:start()
     print("-- Starting Seal")
     if self.hotkeyShow then
         self.hotkeyShow:enable()
+    end
+    if self.hotkeyToggle then
+        self.hotkeyToggle:enable()
     end
     return self
 end
@@ -113,6 +214,9 @@ function obj:stop()
     if self.hotkeyShow then
         self.hotkeyShow:disable()
     end
+    if self.hotkeyToggle then
+        self.hotkeyToggle:disable()
+    end
     return self
 end
 
@@ -130,6 +234,24 @@ end
 ---  * This may be useful if you wish to show Seal in response to something other than its hotkey
 function obj:show()
     self.chooser:show()
+    return self
+end
+
+--- Seal:toggle()
+--- Method
+--- Shows or hides the Seal UI
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * None
+function obj:toggle()
+    if self.chooser:isVisible() then
+        self.chooser:hide()
+    else
+        self.chooser:show()
+    end
     return self
 end
 
