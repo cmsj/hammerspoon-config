@@ -49,9 +49,15 @@ krbRefresherTask = nil
 
 -- Load Seal - This is a pretty simple implementation of something like Alfred
 hs.loadSpoon("Seal")
-spoon.Seal:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "urls"})
+spoon.Seal:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions"})
 spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
 spoon.Seal:start()
+--spoon.Seal.plugins.urlformats:providersTable({ rhbz = { name = "Red Hat Bugzilla", url = "https://bugzilla.redhat.com/show_bug.cgi?id=%s", },
+--                                           lp = { name = "Launchpad Bug",    url = "https://launchpad.net/bugs/%s", }, })
+spoon.Seal.plugins.useractions.actions = {
+    ["Red Hat Bugzilla"] = { url = "https://bugzilla.redhat.com/show_bug.cgi?id=${query}", icon="favicon", keyword="bz" },
+    ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
+}
 
 -- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
 -- This draws a bright red circle around the pointer for a few seconds
@@ -569,3 +575,10 @@ krbRefresherTimer = hs.timer.doEvery(7200, function()
     print("Refreshing krb tickets. Will refresh again in 2 hours")
     krbRefresherTask = hs.task.new("/usr/bin/kinit", nil, {"-R"}):start()
 end)
+
+function karabinerCallback(eventName, params)
+    print("Event: "..eventName)
+    print(hs.inspect(params))
+end
+
+hs.urlevent.bind("karabiner", karabinerCallback)
