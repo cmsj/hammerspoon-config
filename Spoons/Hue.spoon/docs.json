@@ -1,0 +1,85 @@
+[
+  {
+    "Constant" : [
+
+    ],
+    "submodules" : [
+
+    ],
+    "Function" : [
+
+    ],
+    "Variable" : [
+      {
+        "doc" : "A user-supplied callback function that will be called when motion is detected on a sensor\n\nParameters:\n * motionDetected - A boolean - true if motion was detected, otherwise false\n * sensorID - A string containing the ID of the sensor\n\nReturns:\n * None",
+        "def" : "Hue.sensorCallback",
+        "stripped_doc" : [
+          "A user-supplied callback function that will be called when motion is detected on a sensor",
+          ""
+        ],
+        "desc" : "A user-supplied callback function that will be called when motion is detected on a sensor",
+        "notes" : [
+
+        ],
+        "signature" : "Hue.sensorCallback",
+        "type" : "Variable",
+        "returns" : [
+          " * None"
+        ],
+        "name" : "sensorCallback",
+        "parameters" : [
+          " * motionDetected - A boolean - true if motion was detected, otherwise false",
+          " * sensorID - A string containing the ID of the sensor",
+          ""
+        ]
+      }
+    ],
+    "stripped_doc" : [
+
+    ],
+    "Deprecated" : [
+
+    ],
+    "type" : "Module",
+    "desc" : "Various useful Philips Hue features",
+    "Constructor" : [
+
+    ],
+    "doc" : "Various useful Philips Hue features\n\nDownload: [https:\/\/github.com\/Hammerspoon\/Spoons\/raw\/master\/Spoons\/Hue.spoon.zip](https:\/\/github.com\/Hammerspoon\/Spoons\/raw\/master\/Spoons\/Hue.spoon.zip)\n\nNote: This only currently works with a single Hue bridge",
+    "Method" : [
+
+    ],
+    "items" : [
+      {
+        "doc" : "A user-supplied callback function that will be called when motion is detected on a sensor\n\nParameters:\n * motionDetected - A boolean - true if motion was detected, otherwise false\n * sensorID - A string containing the ID of the sensor\n\nReturns:\n * None",
+        "def" : "Hue.sensorCallback",
+        "stripped_doc" : [
+          "A user-supplied callback function that will be called when motion is detected on a sensor",
+          ""
+        ],
+        "desc" : "A user-supplied callback function that will be called when motion is detected on a sensor",
+        "notes" : [
+
+        ],
+        "signature" : "Hue.sensorCallback",
+        "type" : "Variable",
+        "returns" : [
+          " * None"
+        ],
+        "name" : "sensorCallback",
+        "parameters" : [
+          " * motionDetected - A boolean - true if motion was detected, otherwise false",
+          " * sensorID - A string containing the ID of the sensor",
+          ""
+        ]
+      }
+    ],
+    "Field" : [
+
+    ],
+    "Command" : [
+
+    ],
+    "name" : "Hue"
+  }
+]
