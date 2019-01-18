@@ -37,7 +37,6 @@ screenWatcher = nil
 usbWatcher = nil
 caffeinateWatcher = nil
 appWatcher = nil
-officeMotionWatcher = nil
 
 -- Watchables
 audiodeviceWatchable = nil
@@ -46,6 +45,7 @@ audiodeviceWatchable = nil
 streamDeck = nil
 krbRefresherTimer = nil
 krbRefresherTask = nil
+officeMotionActivityID = nil
 
 -- Load Seal - This is a pretty simple implementation of something like Alfred
 hs.loadSpoon("Seal")
@@ -80,10 +80,15 @@ if (hostname == "pixukipa") then
     statuslets = require("statuslets"):start()
 
     -- If the Philips Hue Motion Sensor in my office detects movement, make sure my iMac screens are awake
-    officeMotionWatcher = require("officeMotion"):init()
+    hs.loadSpoon("Hue")
+    spoon.Hue.sensorCallback = function(presence, sensor)
+        if presence then
+            print("Motion detected on sensor: " .. sensor .. ". Declaring user activity")
+            officeMotionActivityID = hs.caffeinate.declareUserActivity(officeMotionActivityID)
+        end
+    end
 else
     statuslets = nil
-    officeMotionWatcher = nil
 
     -- Display a menubar item to indicate if the Internet is reachable
     reachabilityMenuItem = require("reachabilityMenuItem"):start()
@@ -94,8 +99,9 @@ display_imac = "iMac"
 display_monitor = "Thunderbolt Display"
 
 -- Define audio device names for headphone/speaker switching
-headphoneDevice = "Turtle Beach USB Audio"
+headphoneDevice = "USB audio CODEC"
 speakerDevice = "Audioengine 2+  "
+--speakerDevice = "Built-in Output"
 
 -- Defines for WiFi watcher
 homeSSID = "chrul" -- My home WiFi SSID
@@ -156,7 +162,7 @@ function toggle_audio_output()
     end
     hs.notify.new({
           title='Hammerspoon',
-            informativeText='Default output device:'..hs.audiodevice.defaultOutputDevice():name()
+            informativeText='Default output device: '..hs.audiodevice.defaultOutputDevice():name()
         }):send()
 end
 
@@ -277,8 +283,8 @@ end
 function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
         print("screensDidSleep")
-        if officeMotionWatcher then
-            officeMotionWatcher:start()
+        if spoon.Hue then
+            hs.timer.doAfter(30, function() spoon.Hue:start() end)
         end
 
         if hs.itunes.isPlaying() then
@@ -294,8 +300,8 @@ function caffeinateCallback(eventType)
             hs.audiodevice.defaultOutputDevice():setMuted(false)
         end
 
-        if officeMotionWatcher then
-            officeMotionWatcher:stop()
+        if spoon.Hue then
+            spoon.Hue:stop()
         end
     elseif (eventType == hs.caffeinate.watcher.screensDidLock) then
         streamDeck:setBrightness(0)
@@ -532,6 +538,9 @@ function deckButtonEvent(deck, button, isDown)
 --     else
 --         deck:setButtonImage(button, hs.image.imageFromName(hs.image.systemImageNames.Folder))
     end
+    if button == 12 and not isDown then
+        spoon.StreamDeckAudioDeviceCycle:cycle()
+    end
     if not isDown then
         audiodeviceWatchable["event"] = "WTF"
     end
@@ -544,9 +553,11 @@ function streamDeckDiscovery(isConnect, deck)
         streamDeck:reset()
         streamDeck:buttonCallback(deckButtonEvent)
         spoon.StreamDeckMicMuter:start(streamDeck, 11)
+        spoon.StreamDeckAudioDeviceCycle:start(streamDeck, 12)
     else
         print("Stream Deck disconnected")
         spoon.StreamDeckMicMuter:stop()
+        spoon.StreamDeckAudioDeviceCycle:stop()
         streamDeck = nil
     end
 end
@@ -565,6 +576,13 @@ hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)
 hs.audiodevice.watcher.start()
 
 hs.loadSpoon("StreamDeckMicMuter")
+hs.loadSpoon("StreamDeckAudioDeviceCycle")
+spoon.StreamDeckAudioDeviceCycle.devices = {
+    ["USB audio CODEC"] = "headphone.png",
+    ["Audioengine 2+  "] = "speaker.png",
+    ["bosies"] = "bluetooth.png",
+    ["Chris' AirPods"] = "airpod.png"
+}
 hs.streamdeck.init(streamDeckDiscovery)
 
 krbRefresherTimer = hs.timer.doEvery(7200, function()
@@ -582,3 +600,11 @@ function karabinerCallback(eventName, params)
 end
 
 hs.urlevent.bind("karabiner", karabinerCallback)
+
+if hs.console.darkMode() then
+    hs.console.outputBackgroundColor({ white = 0 })
+    hs.console.consolePrintColor({ white = 1 })
+    hs.console.consoleResultColor({ white = 0.8 })
+    hs.console.consoleCommandColor({ white = 1 })
+end
+

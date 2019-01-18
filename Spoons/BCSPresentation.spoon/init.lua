@@ -133,9 +133,11 @@ function obj.makewebview(name, place, url, html)
         print("Creating webview "..name)
         local webViewRect
         if place == "right" then
-            webViewRect = hs.geometry.rect(obj.get_right_frame(obj.screenFrame))
+            webViewRect = obj.get_right_frame(33)
+        elseif place == "righthalf" then
+            webViewRect = obj.get_right_frame(50)
         elseif place == "body" then
-            webViewRect = hs.geometry.rect(obj.get_body_frame(obj.screenFrame))
+            webViewRect = obj.get_body_frame(obj.screenFrame, 100)
         end
         local webview = hs.webview.new(webViewRect)
         webview:setLevel(hs.drawing.windowLevels["normal"]+1)
@@ -155,14 +157,10 @@ end
 obj.slides = {
     {
         ["header"] = "Hammerspoon",
-        ["body"] = [[Staggeringly powerful macOS desktop automation.
-
- • Thanks for coming!
- • My name is Chris Jones
-   • Working on OpenStack for Red Hat
-   • cmsj@tenshu.net
-   • @cmsj on GitHub/Twitter/etc
-   • Ng on IRC
+        ["body"] = [[
+ • Ng on IRC
+ • cmsj everywhere else
+ • Work at Red Hat on OpenStack
  • Do we have any Mac users present?
    (this could be very boring if not!)]],
         ["enterFn"] = function()
@@ -173,25 +171,23 @@ obj.slides = {
     {
         ["header"] = "Agenda",
         ["body"] = [[We will cover:
- • History of automation on Apple computers
- • Our journey to creating Hammerspoon
+ • A little Apple history
+ • Hammerspoon's birth
  • How the app works
- • Impressive demos]]
+ • Questions
+ 
+ (the whole talk is a demo)]]
     },
     {
-        ["header"] = "History of Apple automation",
-        ["body"] = [[Strong history:
+        ["header"] = "A little Apple history",
+        ["body"] = [[First party:
  • 1991 - Apple Events (System 7)
-   • Foundation of much of what comes later
  • 1993 - AppleScript (System 7.1.1)
-   • Now expected that apps are scriptable
  • 2005 - Automator (OS X 10.4)
-   • User applications, Folder Actions, System Services
  • 2007 - ScriptingBridge (OS X 10.5)
-   • AppleScript power for Objective C, JavaScript, Python and Ruby
- • 1991 onwards - Third Parties
-   • AppleScript libraries
-   • Many automation/customisation utilities]]
+
+Third party:
+ • 1991 onwards - AppleScript libraries, many utilities]]
     },
     {
         ["header"] = "AppleScript",
@@ -199,15 +195,17 @@ obj.slides = {
             obj.makecodeview(obj.slideView, "appleScriptCodeView", "righthalf", [[tell application "Hammerspoon"
   execute lua code "hs.reload()"
 end tell
-    tell application "Safari"
-        set currentURL to URL of document 1
-    end tell
-    return currentURL]])
+
+tell application "Safari"
+    set currentURL to URL of document 1
+end tell
+return currentURL]])
         end,
         ["bodyWidth"] = 50,
         ["body"] = [[ • Supposedly simple, natural language
  • Very powerful despite its awful syntax
  • High level messages passed to apps via Apple Events
+ • Apps expected to expose their functionality
  • Apps can expose object hierarchies (e.g. a browser can expose page elements within tabs within windows)]]
     },
     {
@@ -271,77 +269,152 @@ end tell
         ["header"] = "So what can it do?",
         ["body"] = [[• Window management
 • Reacting to all kinds of events
-  • WiFi, USB, path/file changes
+  • WiFi, USB, path/file changes, location, audio devices
 • Interacting with applications (menus)
 • Drawing custom interfaces on the screen
-• URL handling/mangling]]
-    },
-    {
-        ["header"] = "Responding to WiFi events",
+• HTTP client/server, raw socket client/server
+• URL handling/mangling
+• MIDI, SQLite3, Timers, Processes, etc.]],
         ["enterFn"] = function()
-          local webview = obj.makewebview("wifiwatcherSlideWebview", "body", nil, [[<pre>
-wifiwatcher = hs.wifi.watcher.new(function()
-  print"wifiwatcher fired"
-  local network = hs.wifi.currentNetwork()
-  if network then
-    hs.alert("joined wifi network "..network)
-  else
-    hs.alert("wifi disconnected")
-  end
-  if network == "Fibonacci" then
-    hs.application.launchOrFocus("Twitter")
-  else
-    local app = hs.application.get("Twitter")
-    if app then
-      app:kill9()
-    end
-  end
-end)
-wifiwatcher:start()
-</pre>]])
-          webview:show(0.3)
-        end,
-        ["exitFn"] = function()
-          local webview = obj.refs["wifiwatcherSlideWebview"]
-          webview:hide(0.2)
-        end
-    },
-    {
-        ["header"] = "Handling URL events",
-        ["enterFn"] = function()
-            local webview = obj.makewebview("URLSlideWebview", "body", nil, '<img src="https://cloud.githubusercontent.com/assets/353427/9669248/c37c6f26-527d-11e5-9299-41b3cdcb4a04.png">')
+            local webview = obj.makewebview("whatCanItDoWebview", "righthalf", "http://www.hammerspoon.org/docs/", nil)
             webview:show(0.3)
+            local webviewRect = webview:frame()
+            local webviewCentrePoint = hs.geometry.point(webviewRect.x + webviewRect.w/2, webviewRect.y + webviewRect.h/2)
+            hs.mouse.setAbsolutePosition(webviewCentrePoint)
+
+            obj.refs["whatCanItDoCounter"] = 100
+            obj.refs["whatCanItDoTimer"] = hs.timer.doUntil(function()
+                    return obj.refs["whatCanItDoCounter"] <= 0
+                end,
+                function()
+                    obj.refs["whatCanItDoCounter"] = obj.refs["whatCanItDoCounter"] - 1
+                    hs.eventtap.event.newScrollEvent({0, -100}, {}, "pixel"):post()
+                end,
+                0.1):start()
         end,
         ["exitFn"] = function()
-            local webview = obj.refs["URLSlideWebview"]
+            obj.refs["whatCanItDoTimer"]:stop()
+            local webview = obj.refs["whatCanItDoWebview"]
             webview:hide(0.2)
         end
     },
     {
-        ["header"] = "Command line interface",
+        ["header"] = "How does it work?",
+        ["body"] = [[• Lua is really easy to embed in C
+• Lots of boilerplate
+• Ripe for abstraction
+• Handles errors with setjmp/longjmp
+• We built "LuaSkin"
+        ]],
         ["enterFn"] = function()
-            local webview = obj.makewebview("IPCSlideWebview", "body", nil, '<img src="https://cloud.githubusercontent.com/assets/525838/12647663/84e93d26-c5d6-11e5-846f-d7a1b7bcdba9.png">')
-            webview:show(0.3)
+            obj.makecodeview(obj.slideView, "howDoesItWorkCodeView", "righthalf", [[luaL_Reg counterLib[] = {
+  {"increment", incrementCounter}, {NULL, NULL}
+};
+void main() {
+    lua_State *L = luaL_newstate(); luaL_openlibs();
+    luaL_newlib(L, counterLib);
+    fictionalEventLoop();
+}
+
+static int incrementCounter(lua_State *L) {
+    if (lua_type(L, 1) != LUA_TINTEGER) {
+        luaL_error(L, "increment requires an integer");
+    }
+    int counter = lua_tointeger(L, 1);
+    counter++;
+    lua_pushinteger(L, counter);
+    return 1;
+}
+]])
         end,
-        ["exitFn"] = function()
-            local webview = obj.refs["IPCSlideWebview"]
-            webview:hide(0.2)
-        end
-    },
-    {
-        ["header"] = "Other modules",
-        ["body"] = [[alert appfinder applescript application audiodevice battery brightness caffeinate chooser drawing eventtap expose geometry grid hints host hotkey http httpserver image itunes javascript layout location menubar messages milight mouse notify pasteboard pathwatcher redshift screen sound spaces speech spotify tabs task timer uielement urlevent usb webview wifi]]
     },
     {
         ["header"] = "LuaSkin",
+        ["body"] = [[• Singleton for Lua state
+• Lua state lifecycle
+• Library creation
+• Object creation
+• Object Lua/ObjC glue
+• Lua/ObjC type translation
+• Lua errors → ObjC exceptions
+• Standalone in theory]],
         ["enterFn"] = function()
-            local webview = obj.makewebview("LuaSkinSlideWebview", "body", "https://github.com/Hammerspoon/hammerspoon/issues/749#issuecomment-173610148", nil)
-            webview:show(0.3)
+            obj.makecodeview(obj.slideView, "luaSkinPart1", "righthalf", [[luaL_Reg lib[] = {{"new", new}, {NULL, NULL}};
+luaL_Reg obj[] = {{"inc", inc}, {NULL, NULL}};
+void main() {
+    LuaSkin *skin = [LuaSkin shared];
+    [skin registerLibrary:lib metaFunctions:nil];
+    [skin registerObject:"counter" objectFunctions:obj];
+}
+static int new(lua_State *L) {
+    LuaSkin *skin = [LuaSkin shared];
+    [skin checkArgs:LS_TINTEGER, LS_TBREAK];
+    Counter *c = [SomeCounterClass newClass];
+    c.value = lua_tointeger(L, 1);
+    [skin pushNSObject:c];
+    return 1;
+}
+static int inc(lua_State *L) {
+    LuaSkin *skin = [LuaSkin shared];
+    [skin checkArgs:LS_TUSERDATA, "counter", LS_TBREAK];
+    Counter *c = get_object(Counter, L, 1, "counter");
+    c.value++;
+    return 0;
+}
+]])
         end,
-        ["exitFn"] = function()
-            local webview = obj.refs["LuaSkinSlideWebview"]
-            webview:hide(0.2)
-        end
+    },
+    {
+        ["header"] = "LuaSkin (real example)",
+        ["enterFn"] = function()
+            obj.makeimageview(obj.slideView, "streamdeck", "body", "streamdeck.jpg")
+        end,
+    },
+    {
+        ["header"] = "LuaSkin (real example)",
+        ["enterFn"] = function()
+            obj.makecodeview(obj.slideView, "luaSkinPart2", "body", [[
+static int pushHSStreamDeckDevice(lua_State *L, id obj) {
+    HSStreamDeckDevice *value = obj;
+    value.selfRefCount++;
+    void** valuePtr = lua_newuserdata(L, sizeof(HSStreamDeckDevice *));
+    *valuePtr = (__bridge_retained void *)value;
+    luaL_getmetatable(L, "hs.streamdeck");
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
+static id toHSStreamDeckDeviceFromLua(lua_State *L, int idx) {
+    LuaSkin *skin = [LuaSkin shared];
+    HSStreamDeckDevice *value;
+    if (luaL_testudata(L, idx, "hs.streamdeck")) {
+        value = get_objectFromUserdata(__bridge HSStreamDeckDevice, L, idx, "hs.streamdeck");
+    } else {
+        [skin logError:[NSString stringWithFormat:@"expected %s object, found %s", "hs.streamdeck",
+                        lua_typename(L, lua_type(L, idx))] ];
+    }
+    return value;
+}
+]])
+        end,
+    },
+    {
+        ["header"] = "LuaSkin (real example)",
+        ["enterFn"] = function()
+            obj.makecodeview(obj.slideView, "luaSkinPart3", "body", [[
+static int streamdeck_setButtonImage(lua_State *L __unused) {
+    LuaSkin *skin = [LuaSkin shared];
+    [skin checkArgs:LS_TUSERDATA, "hs.streamdeck", LS_TNUMBER, LS_TUSERDATA, "hs.image", LS_TBREAK];
+
+    HSStreamDeckDevice *device = [skin luaObjectAtIndex:1 toClass:"HSStreamDeckDevice"];
+
+    [device setImage:[skin luaObjectAtIndex:3 toClass:"NSImage"] forButton:(int)lua_tointeger(skin.L, 2)];
+
+    lua_pushvalue(skin.L, 1);
+    return 1;
+}
+        ]])
+        end,
     },
     {
         ["header"] = "Questions?"
@@ -415,6 +488,7 @@ end
 
 -- Move one slide forward
 function obj:nextSlide()
+    hs.mouse.setAbsolutePosition(hs.geometry.point(obj.screenFrame.x + obj.screenFrame.w, obj.screenFrame.y + obj.screenFrame.h/2))
     if self.currentSlide < #self.slides then
         if self.slides[self.currentSlide] and self.slides[self.currentSlide]["exitFn"] then
             print("running exitFn for slide")

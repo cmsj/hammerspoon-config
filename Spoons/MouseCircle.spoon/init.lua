@@ -1,6 +1,8 @@
 --- === MouseCircle ===
 ---
 --- Draws a circle around the mouse pointer when a hotkey is pressed
+---
+--- Download: [https://github.com/Hammerspoon/Spoons/raw/master/Spoons/MouseCircle.spoon.zip](https://github.com/Hammerspoon/Spoons/raw/master/Spoons/MouseCircle.spoon.zip)
 
 local obj = {}
 obj.__index = obj
@@ -29,7 +31,6 @@ obj.color = nil
 ---  * mapping - A table containing hotkey modifier/key details for the following items:
 ---   * show - This will cause the mouse circle to be drawn
 function obj:bindHotkeys(mapping)
-    print("bindHotkeys")
     if (self.hotkey) then
         self.hotkey:delete()
     end
@@ -50,11 +51,11 @@ end
 --- Returns:
 ---  * None
 function obj:show()
-    circle = self.circle
-    timer = self.timer
+    local circle = self.circle
+    local timer = self.timer
 
     if circle then
-        circle:delete()
+        circle:hide(0.5)
         if timer then
             timer:stop()
         end
@@ -78,7 +79,7 @@ function obj:show()
 
     self.timer = hs.timer.doAfter(3, function()
         self.circle:hide(0.5)
-        hs.timer.doAfter(0.6, function() self.circle:delete() end)
+        hs.timer.doAfter(0.6, function() self.circle:delete() self.circle = nil end)
     end)
 
     return self
