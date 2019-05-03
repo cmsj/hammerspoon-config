@@ -6,12 +6,13 @@
 ---
 --- Seal includes a number of plugins, which you can choose to load (see `:loadPlugins()` below):
 ---  * apps : Launch applications by name
----  * safari_bookmarks : Open Safari bookmarks (this is broken since at least High Sierra)
 ---  * calc : Simple calculator
----  * vpn : Connect and disconnect VPNs (currently supports Viscosity and macOS system preferences)A
----  * useractions : User defined custom actions
+---  * rot13 : Apply ROT13 substitution cipher
+---  * safari_bookmarks : Open Safari bookmarks (this is broken since at least High Sierra)
 ---  * screencapture : Lets you take screenshots in various ways
 ---  * urlformats : User defined URL formats to open
+---  * useractions : User defined custom actions
+---  * vpn : Connect and disconnect VPNs (currently supports Viscosity and macOS system preferences)A
 
 local obj = {}
 obj.__index = obj
@@ -221,37 +222,39 @@ function obj:stop()
     return self
 end
 
---- Seal:show()
+--- Seal:show(query)
 --- Method
 --- Shows the Seal UI
 ---
 --- Parameters:
----  * None
+---  * query - An optional string to pre-populate the query box with
 ---
 --- Returns:
 ---  * None
 ---
 --- Notes:
 ---  * This may be useful if you wish to show Seal in response to something other than its hotkey
-function obj:show()
+function obj:show(query)
     self.chooser:show()
+    self.chooser:query(query)
     return self
 end
 
---- Seal:toggle()
+--- Seal:toggle(query)
 --- Method
 --- Shows or hides the Seal UI
 ---
 --- Parameters:
----  * None
+---  * query - An optional string to pre-populate the query box with
 ---
 --- Returns:
 ---  * None
-function obj:toggle()
+function obj:toggle(query)
     if self.chooser:isVisible() then
         self.chooser:hide()
     else
-        self.chooser:show()
+        self:show(query)
+
     end
     return self
 end
@@ -341,6 +344,7 @@ return obj
 ---
 --- Various APIs for Seal plugins
 
+-- This isn't really shown, but it's necessary to force Seal.plugins.html to render
 --- Seal.plugins
 --- Constant
 --- This is a table containing all of the loaded plugins for Seal. You should interact with it only via documented API that the plugins expose.

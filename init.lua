@@ -49,8 +49,9 @@ officeMotionActivityID = nil
 
 -- Load Seal - This is a pretty simple implementation of something like Alfred
 hs.loadSpoon("Seal")
-spoon.Seal:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions"})
+spoon.Seal:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions", "pasteboard"})
 spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
+spoon.Seal.plugins.pasteboard.historySize=4000
 spoon.Seal:start()
 --spoon.Seal.plugins.urlformats:providersTable({ rhbz = { name = "Red Hat Bugzilla", url = "https://bugzilla.redhat.com/show_bug.cgi?id=%s", },
 --                                           lp = { name = "Launchpad Bug",    url = "https://launchpad.net/bugs/%s", }, })
@@ -439,6 +440,9 @@ hyperfns['0'] = function()
         print(screenWatcher)
         print(usbWatcher)
         print(caffeinateWatcher)
+    end
+hyperfns['v'] = function()
+        spoon.Seal:toggle("pb")
     end
 
 for _hotkey, _fn in pairs(hyperfns) do
