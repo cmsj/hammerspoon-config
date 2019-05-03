@@ -48,13 +48,14 @@ function obj.choicesPasteboardCommand(query)
         choice["type"] = "copy"
         if pasteboardItem["uti"] then
             choice["subText"] = pasteboardItem["uti"]
-            if hs.application.defaultAppForUTI then
-                local bundleID = hs.application.defaultAppForUTI(pasteboardItem["uti"])
-                print("Default app for "..pasteboardItem["uti"].." :: "..(bundleID or "(null)"))
-                if bundleID then
-                    choice["image"] = hs.image.imageFromAppBundle(bundleID)
-                end
-            end
+        end
+        if pasteboardItem["fullData"]["com.apple.icns"] then
+            -- This can't work until hs.image.imageFromData() exists
+            local image = nil -- hs.image.imageFromData(pasteboardItem["fullData"]["com.apple.icns"])
+            --choice["image"] = image
+        end
+        if choice["image"] == nil and pasteboardItem["app"] then
+            choice["image"] = hs.image.imageFromAppBundle(pasteboardItem["app"])
         end
         table.insert(choices, choice)
     end
@@ -70,8 +71,14 @@ end
 function obj.checkPasteboard()
     local pasteboard = hs.pasteboard.getContents()
     local shouldSave = false
-    -- FIXME: Filter out things with UTIs documented at http://nspasteboard.org/
-    if pasteboard ~= obj.itemBuffer[#obj.itemBuffer]["text"] then
+    local isNew = true
+    if #obj.itemBuffer > 0 then
+        if pasteboard == obj.itemBuffer[#obj.itemBuffer]["text"] then
+            -- Skip grabbing the contents - it's the same as last time
+            isNew = false
+        end
+    end
+    if isNew then
         local currentTypes = hs.pasteboard.allContentTypes()[1]
         for _,aType in pairs(currentTypes) do
             for _,uti in pairs({"de.petermaurer.TransientPasteboardType",
@@ -89,6 +96,11 @@ function obj.checkPasteboard()
         item = {}
         item["text"] = pasteboard
         item["uti"] = currentTypes[1]
+        local app = hs.application.frontmostApplication()
+        if app then
+            item["app"] = app:bundleID()
+        end
+        item["fullData"] = hs.pasteboard.readAllData()
         table.insert(obj.itemBuffer, item)
         shouldSave = true
     end
