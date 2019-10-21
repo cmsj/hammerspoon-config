@@ -14,7 +14,9 @@ obj.updateText = nil
 obj.updateDot = nil
 obj.updateCounter = nil
 
-hs.canvas.drawingWrapper(true)
+if hs.canvas.drawingWrapper then
+    hs.canvas.drawingWrapper(true)
+end
 
 function obj:render()
     -- Destroy existing Statuslets

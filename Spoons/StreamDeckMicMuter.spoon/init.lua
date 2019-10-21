@@ -29,7 +29,13 @@ end
 obj.spoonPath = script_path()
 
 function obj.setAllDeviceState(state)
-    hs.fnutils.each(hs.audiodevice.allInputDevices(), function(device) device:setInputMuted(state) end)
+    hs.fnutils.each(hs.audiodevice.allInputDevices(), function(device)
+        print("Setting "..device:name().." to: "..tostring(state))
+        -- This is a terrible hack for a hacky Line In solution I use. This should really be configurable
+        if device:name() ~= 'USB Sound Device        ' then
+            device:setInputMuted(state)
+        end
+    end)
 end
 
 function obj.audiodeviceDeviceCallback(watcher, path, key, old, new)

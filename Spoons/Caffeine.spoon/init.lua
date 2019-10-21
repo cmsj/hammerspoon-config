@@ -1,6 +1,7 @@
 --- === Caffeine ===
 ---
 --- Prevent the screen from going to sleep
+--- Download: [https://github.com/Hammerspoon/Spoons/raw/master/Spoons/Caffeine.spoon.zip](https://github.com/Hammerspoon/Spoons/raw/master/Spoons/Caffeine.spoon.zip)
 local obj = { __gc = true }
 --obj.__index = obj
 setmetatable(obj, obj)
@@ -59,9 +60,12 @@ end
 --- Returns:
 ---  * The Caffeine object
 function obj:start()
+    if self.menuBarItem then self:stop() end
     self.menuBarItem = hs.menubar.new()
     self.menuBarItem:setClickCallback(self.clicked)
-    self.hotkeyToggle:enable()
+    if (self.hotkeyToggle) then
+        self.hotkeyToggle:enable()
+    end
     self.setDisplay(hs.caffeinate.get("displayIdle"))
 
     return self
@@ -77,8 +81,10 @@ end
 --- Returns:
 ---  * The Caffeine object
 function obj:stop()
-    self.menuBarItem:delete()
-    self.hotkeyToggle:disable()
+    if self.menuBarItem then self.menuBarItem:delete() end
+    if (self.hotkeyToggle) then
+        self.hotkeyToggle:disable()
+    end
     self.menuBarItem = nil
     return self
 end

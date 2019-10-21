@@ -82,6 +82,7 @@ if (hostname == "pixukipa") then
 
     -- If the Philips Hue Motion Sensor in my office detects movement, make sure my iMac screens are awake
     hs.loadSpoon("Hue")
+    hueTimer = nil
     spoon.Hue.sensorCallback = function(presence, sensor)
         if presence then
             print("Motion detected on sensor: " .. sensor .. ". Declaring user activity")
@@ -285,7 +286,7 @@ function caffeinateCallback(eventType)
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
         print("screensDidSleep")
         if spoon.Hue then
-            hs.timer.doAfter(30, function() spoon.Hue:start() end)
+            hueTimer = hs.timer.doAfter(30, function() spoon.Hue:start() end)
         end
 
         if hs.itunes.isPlaying() then
@@ -302,6 +303,7 @@ function caffeinateCallback(eventType)
         end
 
         if spoon.Hue then
+            hueTimer:stop()
             spoon.Hue:stop()
         end
     elseif (eventType == hs.caffeinate.watcher.screensDidLock) then
@@ -534,7 +536,7 @@ end
 
 function deckButtonEvent(deck, button, isDown)
     print("deckButtonEvent: "..button.." isDown: "..(isDown and "YES" or "NO"))
-    if button == 11 and not isDown then
+    if button == 39 and not isDown then
         spoon.StreamDeckMicMuter:toggleMute()
 --     elseif isDown then
 --         --deck:setButtonColor(button, hs.drawing.color.definedCollections.x11.purple)
@@ -570,10 +572,10 @@ audiodeviceWatchable = hs.watchable.new("audiodevice", true)
 function audiodeviceDeviceCallback(event)
     print("audiodeviceDeviceCallback: "..event)
     -- Force the internal mic to always remain the default input device
-    if event == "dIn " then
-        print("Forcing default input to Internal Microphone")
-        hs.timer.doAfter(2, function() hs.audiodevice.findInputByName("Built-in Microphone"):setDefaultInputDevice() end)
-    end
+--    if event == "dIn " then
+--        print("Forcing default input to Internal Microphone")
+--        hs.timer.doAfter(2, function() hs.audiodevice.findInputByName("Built-in Microphone"):setDefaultInputDevice() end)
+--    end
     audiodeviceWatchable["event"] = event
 end
 hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)
