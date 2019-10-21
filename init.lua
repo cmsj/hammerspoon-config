@@ -84,6 +84,16 @@ if (hostname == "pixukipa") then
     hs.loadSpoon("Hue")
     hueTimer = nil
     spoon.Hue.sensorCallback = function(presence, sensor)
+        day = tonumber(os.date("%w"))
+        if day > 5 or day < 1 then
+            print("Ignoring motion, it's the weekend")
+            return
+        end
+        hour = tonumber(os.date("%H"))
+        if hour < 9 or hour > 18 then
+            print("Ignoring motion, it's not working hours")
+            return
+        end
         if presence then
             print("Motion detected on sensor: " .. sensor .. ". Declaring user activity")
             officeMotionActivityID = hs.caffeinate.declareUserActivity(officeMotionActivityID)
