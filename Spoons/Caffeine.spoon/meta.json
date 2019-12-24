@@ -1,0 +1,9 @@
+{
+    "name": "Caffeine",
+    "version": "1.0",
+    "author": "Chris Jones",
+    "author_email": "cmsj@tenshu.net",
+    "homepage": "https://github.com/Hammerspoon/Spoons",
+    "license": "MIT",
+    "license_url": "https://opensource.org/licenses/MIT"
+}

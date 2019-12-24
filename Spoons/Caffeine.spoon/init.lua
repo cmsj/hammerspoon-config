@@ -9,22 +9,8 @@ obj.__gc = function(t)
     t:stop()
 end
 
--- Metadata
-obj.name = "Caffeine"
-obj.version = "1.0"
-obj.author = "Chris Jones <cmsj@tenshu.net>"
-obj.homepage = "https://github.com/Hammerspoon/Spoons"
-obj.license = "MIT - https://opensource.org/licenses/MIT"
-
 obj.menuBarItem = nil
 obj.hotkeyToggle = nil
-
--- Internal function used to find our location, so we know where to load files from
-local function script_path()
-    local str = debug.getinfo(2, "S").source:sub(2)
-    return str:match("(.*/)")
-end
-obj.spoonPath = script_path()
 
 function obj:init()
 end

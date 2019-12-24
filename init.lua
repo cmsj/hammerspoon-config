@@ -433,8 +433,8 @@ hyperfns['Down'] = hs.grid.pushWindowDown
 -- Application hotkeys
 hyperfns['e'] = function() toggle_application("iTerm2") end
 hyperfns['q'] = function() toggle_application("Safari") end
-hyperfns['z'] = function() toggle_application("Reeder") end
-hyperfns['w'] = function() toggle_application("IRC") end
+hyperfns['z'] = function() toggle_application("Kiwi for Gmail") end
+hyperfns['w'] = function() toggle_application("Textual IRC Client") end
 
 -- Misc hotkeys
 hyperfns['y'] = hs.toggleConsole
@@ -624,3 +624,20 @@ if hs.console.darkMode() then
     hs.console.consoleCommandColor({ white = 1 })
 end
 
+hs.loadSpoon("SpoonInstall")
+spoon.SpoonInstall.use_syncinstall = true
+Install=spoon.SpoonInstall
+
+Install:andUse("URLDispatcher",
+  {
+    config = {
+      url_patterns = {
+        { "https?://.*.redhat.com", "org.mozilla.firefox" },
+      },
+      default_handler = "com.apple.Safari"
+    },
+    start = true
+  }
+)
+
+hs.chooser.globalCallback = nil
