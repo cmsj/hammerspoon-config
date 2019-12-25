@@ -4,21 +4,20 @@
 -- package.cpath = package.cpath .. ";" .. ZBS .. "/bin/?.dylib;" .. ZBS .. "/bin/clibs53/?.dylib"
 -- require("mobdebug").start()
 
---hs.crash.throwObjCException("lolception", "This was deliberate")
 -- Print out more logging for me to see
 require("hs.crash")
 hs.crash.crashLogToNSLog = false
 
+-- Make all our animations really fast
 hs.window.animationDuration = 0.1
+
 -- Trace all Lua code
 function lineTraceHook(event, data)
     lineInfo = debug.getinfo(2, "Snl")
     print("TRACE: "..(lineInfo["short_src"] or "<unknown source>")..":"..(lineInfo["linedefined"] or "<??>"))
 end
+-- Uncomment the following line to enable tracing
 --debug.sethook(lineTraceHook, "l")
-
--- Seed the RNG
-math.randomseed(os.time())
 
 -- Capture the hostname, so we can make this config behave differently across my Macs
 hostname = hs.host.localizedName()
@@ -47,32 +46,51 @@ krbRefresherTimer = nil
 krbRefresherTask = nil
 officeMotionActivityID = nil
 
+-- Load SpoonInstall, so we can easily load our other Spoons
+hs.loadSpoon("SpoonInstall")
+spoon.SpoonInstall.use_syncinstall = true
+Install=spoon.SpoonInstall
+
+-- Direct URLs automatically based on patterns
+Install:andUse("URLDispatcher",
+  {
+    config = {
+      url_patterns = {
+        { "https?://.*.redhat.com", "org.mozilla.firefox" },
+      },
+      default_handler = "com.apple.Safari"
+    },
+    start = true
+  }
+)
+
 -- Load Seal - This is a pretty simple implementation of something like Alfred
-hs.loadSpoon("Seal")
-spoon.Seal:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions", "pasteboard"})
-spoon.Seal:bindHotkeys({show={{"cmd"}, "Space"}})
-spoon.Seal.plugins.pasteboard.historySize=4000
-spoon.Seal:start()
---spoon.Seal.plugins.urlformats:providersTable({ rhbz = { name = "Red Hat Bugzilla", url = "https://bugzilla.redhat.com/show_bug.cgi?id=%s", },
---                                           lp = { name = "Launchpad Bug",    url = "https://launchpad.net/bugs/%s", }, })
-spoon.Seal.plugins.useractions.actions = {
-    ["Red Hat Bugzilla"] = { url = "https://bugzilla.redhat.com/show_bug.cgi?id=${query}", icon="favicon", keyword="bz" },
-    ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
-}
+Install:andUse("Seal",
+  {
+    hotkeys = {
+        show = { {"cmd"}, "Space" }
+    },
+    fn = function(s)
+        s:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions", "pasteboard"})
+        s.plugins.pasteboard.historySize=4000
+        s.Seal.plugins.useractions.actions = {
+            ["Red Hat Bugzilla"] = { url = "https://bugzilla.redhat.com/show_bug.cgi?id=${query}", icon="favicon", keyword="bz" },
+            ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
+        }
+    end,
+    start = true
+  }
+)
 
 -- I always end up losing my mouse pointer, particularly if it's on a monitor full of terminals.
 -- This draws a bright red circle around the pointer for a few seconds
-hs.loadSpoon("MouseCircle")
-spoon.MouseCircle:bindHotkeys({show={hyper, "d"}})
+Install:andUse("MouseCircle", { hotkeys = { show = { hyper, "d" }}})
 
 -- Replace Caffeine.app with 18 lines of Lua :D
-hs.loadSpoon("Caffeine")
-spoon.Caffeine:bindHotkeys({toggle={hyper, "c"}})
-spoon.Caffeine:start()
+Install:andUse("Caffeine", { hotkeys = { toggle = { hyper, "c" }}}, start = true)
 
 -- Draw pretty rounded corners on all screens
-hs.loadSpoon("RoundedCorners")
-spoon.RoundedCorners:start()
+Install:andUse("RoundedCorners", { start = true })
 
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 if (hostname == "pixukipa") then
@@ -503,47 +521,6 @@ hs.notify.new({
         informativeText='Config loaded'
     }):send()
 
--- This is some developer debugging stuff. It will cause Hammerspoon to crash if any Lua is being executed on the wrong thread. You probably don't want this in your config :)
--- local function crashifnotmain(reason)
--- --  print("crashifnotmain called with reason", reason) -- may want to remove this, very verbose otherwise
---   if not hs.crash.isMainThread() then
---     print("not in main thread, crashing")
---     hs.crash.crash()
---   end
--- end
--- debug.sethook(crashifnotmain, 'c')
-
---collectgarbage("setstepmul", 1000)
---collectgarbage("setpause", 1)
-
---local wfRedshift=hs.window.filter.new({loginwindow={visible=true,allowRoles='*'}},'wf-redshift')
---hs.redshift.start(2000,'20:00','7:00','3h',false,wfRedshift)
-
-function updateWallpaperFromData(data)
-    local f = io.open("/Users/cmsj/.hammerspoon/wallpaper.png", "w")
-    f:write(data)
-    --hs.fnutils.each(hs.screen.allScreens(), function(screen) screen:screen_desktopImageURL("file:///Users/cmsj/.hammerspoon/wallpaper.png") end)
-end
-
-function fetchNewWallpaper()
-    hs.http.asyncGet("https://api.unsplash.com/photos/random", {Authorization="Client-ID 927e389a0222f70e17988711d2fe665ca82b5c4e8e7caacdb2e17cc515c2eee3"}, function(code,body,headers)
-        if code == 200 then
-            local url = hs.json.decode(body)["urls"]["raw"]
-            print("Fetching image: "..url)
-            hs.http.asyncGet(url, nil, function(code,image,headers)
-                print("Code: "..code)
-                print("Headers: "..hs.inspect(headers))
-                print("Body: "..image)
-                if code == 200 then
-                    updateWallpaperFromData(image)
-                end
-            end)
-        end
-    end)
-end
-
---rwp_timer = hs.timer.new(600, function() fetchNewWallpaper() end):start()
-
 function deckButtonEvent(deck, button, isDown)
     print("deckButtonEvent: "..button.." isDown: "..(isDown and "YES" or "NO"))
     if button == 39 and not isDown then
@@ -624,20 +601,8 @@ if hs.console.darkMode() then
     hs.console.consoleCommandColor({ white = 1 })
 end
 
-hs.loadSpoon("SpoonInstall")
-spoon.SpoonInstall.use_syncinstall = true
-Install=spoon.SpoonInstall
-
-Install:andUse("URLDispatcher",
-  {
-    config = {
-      url_patterns = {
-        { "https?://.*.redhat.com", "org.mozilla.firefox" },
-      },
-      default_handler = "com.apple.Safari"
-    },
-    start = true
-  }
-)
-
 hs.chooser.globalCallback = nil
+
+--collectgarbage("setstepmul", 1000)
+--collectgarbage("setpause", 1)
+
