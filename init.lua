@@ -42,6 +42,7 @@ audiodeviceWatchable = nil
 
 -- Other useful objects
 streamDeck = nil
+miniDeck = nil
 krbRefresherTimer = nil
 krbRefresherTask = nil
 officeMotionActivityID = nil
@@ -238,7 +239,7 @@ function applicationWatcher(appName, eventType, appObject)
             local app = hs.application.get(appName)
             if app then
                 local appIcon = hs.image.imageFromAppBundle(app:bundleID())
-                streamDeck:setButtonImage(5, appIcon)
+                streamDeck:setButtonImage(1, appIcon)
             end
         end
     end
@@ -523,7 +524,7 @@ hs.notify.new({
 
 function deckButtonEvent(deck, button, isDown)
     print("deckButtonEvent: "..button.." isDown: "..(isDown and "YES" or "NO"))
-    if button == 39 and not isDown then
+    if button == 89 and not isDown then
         spoon.StreamDeckMicMuter:toggleMute()
 --     elseif isDown then
 --         --deck:setButtonColor(button, hs.drawing.color.definedCollections.x11.purple)
@@ -540,18 +541,21 @@ function deckButtonEvent(deck, button, isDown)
 end
 
 function streamDeckDiscovery(isConnect, deck)
-    if isConnect then
-        print("Stream Deck connected: "..tostring(deck))
-        streamDeck = deck
-        streamDeck:reset()
-        streamDeck:buttonCallback(deckButtonEvent)
-        spoon.StreamDeckMicMuter:start(streamDeck, 11)
-        spoon.StreamDeckAudioDeviceCycle:start(streamDeck, 12)
-    else
-        print("Stream Deck disconnected")
-        spoon.StreamDeckMicMuter:stop()
-        spoon.StreamDeckAudioDeviceCycle:stop()
-        streamDeck = nil
+    --if deck:serialNumber() == "AL15G1A01664" then
+    if deck:serialNumber() == "BL44H1B01314" then
+        if isConnect then
+            print("Stream Deck connected: "..tostring(deck))
+            streamDeck = deck
+            streamDeck:reset()
+            streamDeck:buttonCallback(deckButtonEvent)
+            spoon.StreamDeckMicMuter:start(streamDeck, 6)
+            spoon.StreamDeckAudioDeviceCycle:start(streamDeck, 5)
+        else
+            print("Stream Deck disconnected")
+            spoon.StreamDeckMicMuter:stop()
+            spoon.StreamDeckAudioDeviceCycle:stop()
+            streamDeck = nil
+        end
     end
 end
 
