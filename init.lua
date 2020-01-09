@@ -74,7 +74,7 @@ Install:andUse("Seal",
     fn = function(s)
         s:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions", "pasteboard"})
         s.plugins.pasteboard.historySize=4000
-        s.Seal.plugins.useractions.actions = {
+        s.plugins.useractions.actions = {
             ["Red Hat Bugzilla"] = { url = "https://bugzilla.redhat.com/show_bug.cgi?id=${query}", icon="favicon", keyword="bz" },
             ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
         }
@@ -88,7 +88,7 @@ Install:andUse("Seal",
 Install:andUse("MouseCircle", { hotkeys = { show = { hyper, "d" }}})
 
 -- Replace Caffeine.app with 18 lines of Lua :D
-Install:andUse("Caffeine", { hotkeys = { toggle = { hyper, "c" }}}, start = true)
+Install:andUse("Caffeine", { hotkeys = { toggle = { hyper, "c" }}, start = true})
 
 -- Draw pretty rounded corners on all screens
 Install:andUse("RoundedCorners", { start = true })
