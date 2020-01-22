@@ -8,6 +8,9 @@
 require("hs.crash")
 hs.crash.crashLogToNSLog = false
 
+-- Pull in private.lua which isn't in this repo because it contains work related stuff
+require("private.lua")
+
 -- Make all our animations really fast
 hs.window.animationDuration = 0.1
 
@@ -56,9 +59,7 @@ Install=spoon.SpoonInstall
 Install:andUse("URLDispatcher",
   {
     config = {
-      url_patterns = {
-        { "https?://.*.redhat.com", "org.mozilla.firefox" },
-      },
+      url_patterns = work_url_patterns,
       default_handler = "com.apple.Safari"
     },
     start = true
@@ -524,7 +525,7 @@ hs.notify.new({
 
 function deckButtonEvent(deck, button, isDown)
     print("deckButtonEvent: "..button.." isDown: "..(isDown and "YES" or "NO"))
-    if button == 89 and not isDown then
+    if button == 6 and not isDown then
         spoon.StreamDeckMicMuter:toggleMute()
 --     elseif isDown then
 --         --deck:setButtonColor(button, hs.drawing.color.definedCollections.x11.purple)
