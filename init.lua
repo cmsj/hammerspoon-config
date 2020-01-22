@@ -9,7 +9,7 @@ require("hs.crash")
 hs.crash.crashLogToNSLog = false
 
 -- Pull in private.lua which isn't in this repo because it contains work related stuff
-require("private.lua")
+require("private")
 
 -- Make all our animations really fast
 hs.window.animationDuration = 0.1
