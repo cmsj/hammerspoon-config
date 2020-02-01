@@ -100,7 +100,7 @@ if (hostname == "fuyo") then
     -- to show various status items. Like Geeklet
     statuslets = require("statuslets"):start()
 
-    -- If the Philips Hue Motion Sensor in my office detects movement, make sure my iMac screens are awake
+    -- If the Philips Hue Motion Sensor in my office detects movement, make sure my Mac's screens are awake
     hs.loadSpoon("Hue")
     hueTimer = nil
     spoon.Hue.sensorCallback = function(presence, sensor)
@@ -127,8 +127,8 @@ else
 end
 
 -- Define monitor names for layout purposes
-display_imac = "iMac"
-display_monitor = "Thunderbolt Display"
+display_imac = "Pro Display XDR"
+display_monitor = "LG Ultrafine"
 
 -- Define audio device names for headphone/speaker switching
 headphoneDevice = "USB audio CODEC"
