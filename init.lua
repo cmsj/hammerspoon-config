@@ -132,7 +132,7 @@ display_imac = "Pro Display XDR"
 display_monitor = "LG Ultrafine"
 
 -- Define audio device names for headphone/speaker switching
-headphoneDevice = "USB audio CODEC"
+headphoneDevice = "CalDigit Thunderbolt 3 Audio"
 speakerDevice = "Audioengine 2+  "
 --speakerDevice = "Built-in Output"
 
