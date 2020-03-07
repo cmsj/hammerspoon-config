@@ -77,6 +77,7 @@ Install:andUse("Seal",
         s.plugins.pasteboard.historySize=4000
         s.plugins.useractions.actions = {
             ["Red Hat Bugzilla"] = { url = "https://bugzilla.redhat.com/show_bug.cgi?id=${query}", icon="favicon", keyword="bz" },
+            ["Red Hat Support"] = { url = "https://access.redhat.com/support/cases/#/case/${query}", icon="favicon", keyword="sup" },
             ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
         }
     end,
