@@ -327,6 +327,8 @@ function caffeinateCallback(eventType)
         local output = hs.audiodevice.defaultOutputDevice()
         shouldUnmuteOnScreenWake = not output:muted()
         output:setMuted(true)
+
+        spoon.Caffeine:setState(false)
     elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
         print("screensDidWake")
         if shouldUnmuteOnScreenWake then
