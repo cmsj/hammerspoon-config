@@ -361,7 +361,7 @@ end
 function home_arrived()
     -- Note: sudo commands will need to have been pre-configured in /etc/sudoers, for passwordless access, e.g.:
     -- cmsj ALL=(root) NOPASSWD: /usr/libexec/ApplicationFirewall/socketfilterfw --setblockall *
-    hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "off"})
+    --hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "off"})
 
     -- Mount my NAS
     hs.applescript.applescript([[
@@ -377,26 +377,16 @@ function home_arrived()
     end
     hs.notify.new({
           title='Hammerspoon',
-            informativeText='Mounted volumes, disabled firewall'
+            informativeText='Mounted volumes'
         }):send()
 end
 
 -- Perform tasks to configure the system for any WiFi network other than my home
 function home_departed()
-    hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "on"})
-    hs.applescript.applescript([[
-        tell application "Finder"
-            eject "Data"
-        end tell
-    ]])
+--    hs.task.new("/usr/bin/sudo", function() end, {"/usr/libexec/ApplicationFirewall/socketfilterfw", "--setblockall", "on"})
     if statuslets then
         statuslets:update()
     end
-
-    hs.notify.new({
-          title='Hammerspoon',
-            informativeText='Unmounted volumes, enabled firewall'
-        }):send()
 end
 
 -- Rather than switch to Safari, copy the current URL, switch back to the previous app and paste,
@@ -579,7 +569,7 @@ hs.audiodevice.watcher.start()
 hs.loadSpoon("StreamDeckMicMuter")
 hs.loadSpoon("StreamDeckAudioDeviceCycle")
 spoon.StreamDeckAudioDeviceCycle.devices = {
-    ["USB audio CODEC"] = "headphone.png",
+    ["CalDigit Thunderbolt 3 Audio"] = "headphone.png",
     ["Audioengine 2+  "] = "speaker.png",
     ["bosies"] = "bluetooth.png",
     ["Chris' AirPods"] = "airpod.png"
