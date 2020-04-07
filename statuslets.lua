@@ -118,7 +118,7 @@ end
 
 function obj:update(force)
     hs.task.new("/usr/bin/grep", self.statusletCallbackCCC, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.cccLast"}):start()
-    hs.task.new("/usr/bin/grep", self.statusletCallbackArq, {"-q", "Arq.*finished backup", "/var/log/system.log"}):start()
+    hs.task.new("/usr/bin/grep", self.statusletCallbackArq, {"-q", os.date("%d/%m/%Y"), os.getenv("HOME").."/.arqLast"}):start()
     if force or self.updateCounter > 11 then
         -- Only do this check about every hour
         print("Checking software update status...")
