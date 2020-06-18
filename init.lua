@@ -55,6 +55,9 @@ hs.loadSpoon("SpoonInstall")
 spoon.SpoonInstall.use_syncinstall = true
 Install=spoon.SpoonInstall
 
+-- Control brightness for all compatible displays, using the keyboard brightness keys
+Install:andUse("AllBrightness", {start=true})
+
 -- Direct URLs automatically based on patterns
 Install:andUse("URLDispatcher",
   {
@@ -128,7 +131,7 @@ else
 end
 
 -- Define monitor names for layout purposes
-display_imac = "Pro Display XDR"
+display_xdr = "Pro Display XDR"
 display_monitor = "LG Ultrafine"
 
 -- Define audio device names for headphone/speaker switching
@@ -166,15 +169,30 @@ frameCache = {}
 dual_display = {
     {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 0.375, 0.5), nil, nil},
     {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.5),   nil, nil},
-    {"Safari",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
-    {"Kiwi for Gmail",    nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
-    {"Trello",            nil,          display_imac,    hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
-    {"Mail",              nil,          display_imac,    hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
+    {"Safari",            nil,          display_xdr,     hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
+    {"Kiwi for Gmail",    nil,          display_xdr,     hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
+    {"Trello",            nil,          display_xdr,     hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
+    {"Mail",              nil,          display_xdr,     hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
     {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 0.375, 0.25), nil, nil},
     {"Fantastical",       nil,          display_monitor, hs.geometry.unitrect(0.375, 0, 5/8, 0.5), nil, nil},
     {"Freeter",           nil,          display_monitor, hs.geometry.unitrect(0.375, 0.5, 5/8, 0.5), nil, nil},
 }
 
+-- Useful helper function for making hs.layout layouts
+function createWindowLayout(name)
+    local layout = string.format("%s = {\n", name)
+    local wins = hs.window.allWindows()
+    for _,win in ipairs(wins) do
+        local app = win:application():name()
+        local winTitle = win:title()
+        local screen = win:screen():name()
+        local frame = win:frame()
+        local row = string.format('{"%s", "%s", "%s", nil, hs.geometry.rect(%i, %i, %i, %i), nil},\n', app, winTitle, screen, frame.x, frame.y, frame.w, frame.h)
+        layout = layout .. row
+    end
+    layout = layout .. "\n}"
+    print(layout)
+end
 -- Helper functions
 
 -- Toggle between speaker and headphone sound devices (useful if you have multiple USB soundcards that are always connected)
@@ -542,7 +560,7 @@ function streamDeckDiscovery(isConnect, deck)
             streamDeck = deck
             streamDeck:reset()
             streamDeck:buttonCallback(deckButtonEvent)
-            spoon.StreamDeckMicMuter:start(streamDeck, 6)
+            spoon.StreamDeckMicMuter:start(streamDeck, 6, false)
             spoon.StreamDeckAudioDeviceCycle:start(streamDeck, 5)
         else
             print("Stream Deck disconnected")
