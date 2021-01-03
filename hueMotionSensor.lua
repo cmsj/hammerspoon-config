@@ -34,6 +34,7 @@ function hueBridge:init()
 end
 
 function hueBridge:start()
+    print("Starting hueMotionSensor polling")
     if not self.userCallback then
         print("ERROR: No userCallback has been set")
         return self
@@ -173,6 +174,7 @@ function hueBridge:pollingStart()
 end
 
 function hueBridge:doPoll()
+    print("polling...")
     if self.isPollingSensor then
         return self
     end
@@ -183,6 +185,7 @@ function hueBridge:doPoll()
         -- FIXME: Handle error codes
         if code == 200 then
             rawJSON = hs.json.decode(body)
+            print("sensor: "..hs.inspect(rawJSON))
             if rawJSON["state"] then
                 self.userCallback(rawJSON["state"]["presence"])
             end
@@ -192,4 +195,3 @@ function hueBridge:doPoll()
 end
 
 return hueBridge
-

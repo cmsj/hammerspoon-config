@@ -196,6 +196,7 @@ function obj:doPoll()
                 -- FIXME: Handle error codes
                 if code == 200 then
                     local rawJSON = hs.json.decode(body)
+                    print(hs.inspect(rawJSON))
                     if rawJSON["state"] then
                         self.sensorCallback(rawJSON["state"]["presence"], sensorID)
                     end

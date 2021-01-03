@@ -56,7 +56,7 @@ spoon.SpoonInstall.use_syncinstall = true
 Install=spoon.SpoonInstall
 
 -- Control brightness for all compatible displays, using the keyboard brightness keys
-Install:andUse("AllBrightness", {start=true})
+--Install:andUse("AllBrightness", {start=true})
 
 -- Direct URLs automatically based on patterns
 Install:andUse("URLDispatcher",
@@ -81,6 +81,7 @@ Install:andUse("Seal",
         s.plugins.useractions.actions = {
             ["Red Hat Bugzilla"] = { url = "https://bugzilla.redhat.com/show_bug.cgi?id=${query}", icon="favicon", keyword="bz" },
             ["Red Hat Support"] = { url = "https://access.redhat.com/support/cases/#/case/${query}", icon="favicon", keyword="sup" },
+            ["Red Hat Support Exception"] = { url = "https://tools.apps.cee.redhat.com/support-exceptions/id/${query}", icon="favicon", keyword="se" },
             ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
         }
     end,
@@ -105,24 +106,24 @@ if (hostname == "fuyo") then
     statuslets = require("statuslets"):start()
 
     -- If the Philips Hue Motion Sensor in my office detects movement, make sure my Mac's screens are awake
-    hs.loadSpoon("Hue")
-    hueTimer = nil
-    spoon.Hue.sensorCallback = function(presence, sensor)
-        day = tonumber(os.date("%w"))
-        if day > 5 or day < 1 then
-            print("Ignoring motion, it's the weekend")
-            return
-        end
-        hour = tonumber(os.date("%H"))
-        if hour < 9 or hour > 18 then
-            print("Ignoring motion, it's not working hours")
-            return
-        end
-        if presence then
-            print("Motion detected on sensor: " .. sensor .. ". Declaring user activity")
-            officeMotionActivityID = hs.caffeinate.declareUserActivity(officeMotionActivityID)
-        end
-    end
+    --hs.loadSpoon("Hue")
+    --hueTimer = nil
+    --spoon.Hue.sensorCallback = function(presence, sensor)
+    --    day = tonumber(os.date("%w"))
+    --    if day > 5 or day < 1 then
+    --        print("Ignoring motion, it's the weekend")
+    --        return
+    --    end
+    --    hour = tonumber(os.date("%H"))
+    --    if hour < 9 or hour > 18 then
+    --        print("Ignoring motion, it's not working hours")
+    --        return
+    --    end
+    --    if presence then
+    --        print("Motion detected on sensor: " .. sensor .. ". Declaring user activity")
+    --        officeMotionActivityID = hs.caffeinate.declareUserActivity(officeMotionActivityID)
+    --    end
+    --end
 else
     statuslets = nil
 
