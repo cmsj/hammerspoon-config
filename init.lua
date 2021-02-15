@@ -386,8 +386,8 @@ function home_arrived()
     hs.applescript.applescript([[
         tell application "Finder"
             try
-                mount volume "smb://smbarchive@gnubert/media"
-                mount volume "smb://smbarchive@gnubert/archive"
+                mount volume "smb://smbarchive@gnubert.local/media"
+                mount volume "smb://smbarchive@gnubert.local/archive"
             end try
         end tell
     ]])
