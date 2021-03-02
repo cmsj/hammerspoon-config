@@ -56,7 +56,7 @@ spoon.SpoonInstall.use_syncinstall = true
 Install=spoon.SpoonInstall
 
 -- Control brightness for all compatible displays, using the keyboard brightness keys
---Install:andUse("AllBrightness", {start=true})
+Install:andUse("AllBrightness", {start=true})
 
 -- Direct URLs automatically based on patterns
 Install:andUse("URLDispatcher",
@@ -84,6 +84,16 @@ Install:andUse("Seal",
             ["Red Hat Support Exception"] = { url = "https://tools.apps.cee.redhat.com/support-exceptions/id/${query}", icon="favicon", keyword="se" },
             ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
         }
+        s.toolbar:addItems({
+            id = "test1",
+            selectable = true,
+            image = hs.image.imageFromName("NSTouchBarGoUpTemplate"),
+            label = "Hide toolbar",
+            fn = function(toolbar, chooser, item, eventName)
+                s.toolbar:visible(false)
+            end
+        })
+--        s:toggleToolbar()
     end,
     start = true
   }
