@@ -25,7 +25,7 @@ function obj:init()
     self.eventtap = hs.eventtap.new({hs.eventtap.event.types.NSSystemDefined},
         function(mainEvent)
             local event = mainEvent:systemKey()
-            print(event['key'])
+            --print(event['key'])
             if (not event or next(event) == nil) then
                 -- This isn't an event we care about, quit now and let it propagate
                 return false
@@ -55,7 +55,7 @@ function obj:init()
             end
 
             for _,screen in pairs(hs.screen.allScreens()) do
-                print("  set "..newBrightness.. " on: "..screen:name())
+                --print("  set "..newBrightness.. " on: "..screen:name())
                 screen:setBrightness(newBrightness)
             end
 
@@ -64,13 +64,13 @@ function obj:init()
 end
 
 function obj:start()
-    print("Starting AllBrightness")
+    --print("Starting AllBrightness")
     self.brightness = hs.screen.allScreens()[1]:getBrightness()
     self.eventtap:start()
 end
 
 function obj:stop()
-    print("Stopping AllBrightness")
+    --print("Stopping AllBrightness")
     self.eventtap:stop()
 end
 
