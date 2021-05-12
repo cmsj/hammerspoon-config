@@ -22,12 +22,18 @@ obj.brightness = nil
 obj.steps = 17
 
 function obj:init()
-    self.eventtap = hs.eventtap.new({hs.eventtap.event.types.NSSystemDefined},
+    self.eventtap = hs.eventtap.new({hs.eventtap.event.types.systemDefined},
         function(mainEvent)
             local event = mainEvent:systemKey()
+            local consumed = false
             --print(event['key'])
+--            print("Window: ", mainEvent:getProperty(hs.eventtap.event.properties['mouseEventWindowUnderMousePointer']))
             if (not event or next(event) == nil) then
                 -- This isn't an event we care about, quit now and let it propagate
+                return false
+            end
+
+            if (event['key'] ~= "BRIGHTNESS_UP" and event['key'] ~= "BRIGHTNESS_DOWN") then
                 return false
             end
 
@@ -55,11 +61,14 @@ function obj:init()
             end
 
             for _,screen in pairs(hs.screen.allScreens()) do
-                --print("  set "..newBrightness.. " on: "..screen:name())
+                print("  set "..newBrightness.. " on: "..screen:name())
                 screen:setBrightness(newBrightness)
+                consumed = true
             end
 
             obj.brightness = hs.screen.allScreens()[1]:getBrightness()
+
+            return consumed
         end)
 end
 

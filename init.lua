@@ -46,8 +46,8 @@ audiodeviceWatchable = nil
 -- Other useful objects
 streamDeck = nil
 miniDeck = nil
-krbRefresherTimer = nil
-krbRefresherTask = nil
+--krbRefresherTimer = nil
+--krbRefresherTask = nil
 officeMotionActivityID = nil
 
 -- Load SpoonInstall, so we can easily load our other Spoons
@@ -555,7 +555,7 @@ function deckButtonEvent(deck, button, isDown)
 --     else
 --         deck:setButtonImage(button, hs.image.imageFromName(hs.image.systemImageNames.Folder))
     end
-    if button == 12 and not isDown then
+    if button == 5 and not isDown then
         spoon.StreamDeckAudioDeviceCycle:cycle()
     end
     if not isDown then
@@ -605,14 +605,14 @@ spoon.StreamDeckAudioDeviceCycle.devices = {
 }
 hs.streamdeck.init(streamDeckDiscovery)
 
-krbRefresherTimer = hs.timer.doEvery(7200, function()
-    if krbRefresherTask and krbRefresherTask:isRunning() then
-        print("Terminating existing kinit process (which shouldn't be running)")
-        krbRefresherTask:terminate()
-    end
-    print("Refreshing krb tickets. Will refresh again in 2 hours")
-    krbRefresherTask = hs.task.new("/usr/bin/kinit", nil, {"-R"}):start()
-end)
+-- krbRefresherTimer = hs.timer.doEvery(7200, function()
+--     if krbRefresherTask and krbRefresherTask:isRunning() then
+--         print("Terminating existing kinit process (which shouldn't be running)")
+--         krbRefresherTask:terminate()
+--     end
+--     print("Refreshing krb tickets. Will refresh again in 2 hours")
+--     krbRefresherTask = hs.task.new("/usr/bin/kinit", nil, {}):start()
+-- end)
 
 function karabinerCallback(eventName, params)
     print("Event: "..eventName)
