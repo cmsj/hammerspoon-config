@@ -84,15 +84,15 @@ Install:andUse("Seal",
             ["Red Hat Support Exception"] = { url = "https://tools.apps.cee.redhat.com/support-exceptions/id/${query}", icon="favicon", keyword="se" },
             ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
         }
-        s.toolbar:addItems({
-            id = "test1",
-            selectable = true,
-            image = hs.image.imageFromName("NSTouchBarGoUpTemplate"),
-            label = "Hide toolbar",
-            fn = function(toolbar, chooser, item, eventName)
-                s.toolbar:visible(false)
-            end
-        })
+--         s.toolbar:addItems({
+--             id = "test1",
+--             selectable = true,
+--             image = hs.image.imageFromName("NSTouchBarGoUpTemplate"),
+--             label = "Hide toolbar",
+--             fn = function(toolbar, chooser, item, eventName)
+--                 s.toolbar:visible(false)
+--             end
+--         })
 --        s:toggleToolbar()
     end,
     start = true
