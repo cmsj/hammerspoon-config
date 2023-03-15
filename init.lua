@@ -4,6 +4,8 @@
 -- package.cpath = package.cpath .. ";" .. ZBS .. "/bin/?.dylib;" .. ZBS .. "/bin/clibs53/?.dylib"
 -- require("mobdebug").start()
 
+hs.console.consoleFont("Liga SFMono Nerd Font")
+
 -- Print out more logging for me to see
 require("hs.crash")
 hs.crash.crashLogToNSLog = false
@@ -76,23 +78,18 @@ Install:andUse("Seal",
         show = { {"cmd"}, "Space" }
     },
     fn = function(s)
-        s:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions", "pasteboard"})
+        s:loadPlugins({"apps", "vpn", "screencapture", "safari_bookmarks", "calc", "useractions", "pasteboard", "filesearch"})
         s.plugins.pasteboard.historySize=4000
-        s.plugins.useractions.actions = {
-            ["Red Hat Bugzilla"] = { url = "https://bugzilla.redhat.com/show_bug.cgi?id=${query}", icon="favicon", keyword="bz" },
-            ["Red Hat Support"] = { url = "https://access.redhat.com/support/cases/#/case/${query}", icon="favicon", keyword="sup" },
-            ["Red Hat Support Exception"] = { url = "https://tools.apps.cee.redhat.com/support-exceptions/id/${query}", icon="favicon", keyword="se" },
-            ["Launchpad Bugs"] = { url = "https://launchpad.net/bugs/${query}", icon="favicon", keyword="lp" },
-        }
---         s.toolbar:addItems({
---             id = "test1",
---             selectable = true,
---             image = hs.image.imageFromName("NSTouchBarGoUpTemplate"),
---             label = "Hide toolbar",
---             fn = function(toolbar, chooser, item, eventName)
---                 s.toolbar:visible(false)
---             end
---         })
+        s.plugins.useractions.actions = useractions_actions
+        s.toolbar:addItems({
+            id = "test1",
+            selectable = true,
+            image = hs.image.imageFromName("NSTouchBarGoUpTemplate"),
+            label = "Hide toolbar",
+            fn = function(toolbar, chooser, item, eventName)
+                s.toolbar:visible(false)
+            end
+        })
 --        s:toggleToolbar()
     end,
     start = true
@@ -146,7 +143,7 @@ display_xdr = "Pro Display XDR"
 display_monitor = "LG Ultrafine"
 
 -- Define audio device names for headphone/speaker switching
-headphoneDevice = "CalDigit Thunderbolt 3 Audio"
+headphoneDevice = "BRIDGE CAST"
 speakerDevice = "Audioengine 2+  "
 --speakerDevice = "Built-in Output"
 
@@ -219,8 +216,10 @@ function toggle_audio_output()
 
     if current:name() == speakers:name() then
         headphones:setDefaultOutputDevice()
+        headphones:setDefaultEffectDevice()
     else
         speakers:setDefaultOutputDevice()
+        speakers:setDefaultEffectDevice()
     end
     hs.notify.new({
           title='Hammerspoon',
@@ -269,6 +268,7 @@ function applicationWatcher(appName, eventType, appObject)
         if streamDeck then
             local app = hs.application.get(appName)
             if app then
+                --print("Writing app icon to Stream Deck for: "..app:bundleID())
                 local appIcon = hs.image.imageFromAppBundle(app:bundleID())
                 streamDeck:setButtonImage(1, appIcon)
             end
@@ -396,8 +396,8 @@ function home_arrived()
     hs.applescript.applescript([[
         tell application "Finder"
             try
-                mount volume "smb://smbarchive@gnubert.local/media"
-                mount volume "smb://smbarchive@gnubert.local/archive"
+                mount volume "smb://smbarchive@GNUBERT._smb._tcp.local/media"
+                mount volume "smb://smbarchive@GNUBERT._smb._tcp.local/archive"
             end try
         end tell
     ]])
@@ -518,8 +518,8 @@ appWatcher = hs.application.watcher.new(applicationWatcher):start()
 screenWatcher = hs.screen.watcher.new(screensChangedCallback)
 screenWatcher:start()
 
-wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
-wifiWatcher:start()
+-- wifiWatcher = hs.wifi.watcher.new(ssidChangedCallback)
+-- wifiWatcher:start()
 
 usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
 usbWatcher:start()
@@ -533,11 +533,11 @@ configFileWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", re
 configFileWatcher:start()
 
 -- Make sure we have the right location settings
-if hs.wifi.currentNetwork() == "chrul" then
-    home_arrived()
-else
-    home_departed()
-end
+-- if hs.wifi.currentNetwork() == "chrul" then
+--     home_arrived()
+-- else
+--     home_departed()
+-- end
 
 -- Finally, show a notification that we finished loading the config successfully
 hs.notify.new({
@@ -565,6 +565,7 @@ end
 
 function streamDeckDiscovery(isConnect, deck)
     --if deck:serialNumber() == "AL15G1A01664" then
+    print("Stream Deck discovered, serial: '"..tostring(deck:serialNumber()).."', firmware: '"..tostring(deck:firmwareVersion()).."'")
     if deck:serialNumber() == "BL44H1B01314" then
         if isConnect then
             print("Stream Deck connected: "..tostring(deck))
@@ -579,6 +580,8 @@ function streamDeckDiscovery(isConnect, deck)
             spoon.StreamDeckAudioDeviceCycle:stop()
             streamDeck = nil
         end
+    else
+        print("  Not a Deck we want to configure")
     end
 end
 
@@ -598,7 +601,7 @@ hs.audiodevice.watcher.start()
 hs.loadSpoon("StreamDeckMicMuter")
 hs.loadSpoon("StreamDeckAudioDeviceCycle")
 spoon.StreamDeckAudioDeviceCycle.devices = {
-    ["CalDigit Thunderbolt 3 Audio"] = "headphone.png",
+    ["BRIDGE CAST"] = "headphone.png",
     ["Audioengine 2+  "] = "speaker.png",
     ["bosies"] = "bluetooth.png",
     ["Chris' AirPods"] = "airpod.png"
@@ -633,3 +636,46 @@ hs.chooser.globalCallback = nil
 --collectgarbage("setstepmul", 1000)
 --collectgarbage("setpause", 1)
 
+function streamDeckTest()
+    local colors = {}
+    local colorn = 0
+    for k,v in pairs(hs.drawing.color.x11) do
+        colorn = colorn + 1
+        colors[colorn]=k
+    end
+
+    for num=1,hs.streamdeck.numDevices() do
+        local device = hs.streamdeck.getDevice(num)
+        local columns, rows = device:buttonLayout()
+        for button=1,rows*columns do
+            device:setButtonColor(button, hs.drawing.color.x11[colors[button]])
+        end
+
+        device:buttonCallback(function(deck, button, isDown)
+            print("Button: "..button.." on: "..tostring(deck))
+        end)
+    end
+
+    hs.timer.usleep(2000000)
+
+    local function ends_with(str, ending)
+        return ending == "" or str:sub(-#ending) == ending
+    end
+
+--    local icons = {}
+--    local iconn = 0
+--    for k,v in pairs(hs.image.additionalImageNames.platinum) do
+--        if not ends_with(k, "Template") then
+--            iconn = iconn + 1
+--            icons[iconn]=k
+--        end
+--    end
+
+    for num=1,hs.streamdeck.numDevices() do
+        local device = hs.streamdeck.getDevice(num)
+        local columns, rows = device:buttonLayout()
+        for button=1,rows*columns do
+            device:setButtonImage(button, hs.image.imageFromName(hs.image.additionalImageNames.platinum[1]))
+        end
+    end
+end
