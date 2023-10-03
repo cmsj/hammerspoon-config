@@ -26,6 +26,8 @@ obj.serviceDomain = "local."
 obj.matchNames = {}
 obj.foundLights = {}
 
+obj.logger = hs.logger.new("ElgatoKeyLight", "info")
+
 --- ElgatoKeyLight.infoPollingInterval
 --- Variable
 --- A number, in seconds, for how often to poll discovered lights for their current state. Defaults to `5`
@@ -47,9 +49,6 @@ function obj:init(matchNames, serviceName, serviceDomain)
     self.matchNames = matchNames
     if serviceName then self.serviceName = serviceName end
     if serviceDomain then self.serviceDomain = serviceDomain end
-
-    self.logger = hs.logger.new("ElgatoKeyLight", "debug")
-    self.bj = hs.bonjour.new()
 end
 
 --- ElgatoKeyLight:start([keepSearching])
@@ -66,6 +65,8 @@ end
 ---  * If `keepSearching` is `true` then the `ElgatoKeyLight:stop()` method can be used to stop the search process
 ---  * It is recommended to only use `keepSearching` if you are expecting to add new KeyLight devices to the network, you change network frequently, or some other reason why you expect the set of KeyLight devices to change
 function obj:start(keepSearching)
+    self.bj = hs.bonjour.new()
+
     if (type(keepSearching) == "boolean") then
         self.keepSearching = keepSearching
     end
@@ -173,6 +174,37 @@ function obj:turnOff(name)
         obj.logger.df("turnOff response: %s, '%s'", response, body)
         obj._updateLightInfo(name, response, body, headers)
     end)
+end
+
+--- ElgatoKeyLight:isOn(name)
+--- Method
+--- Check if a KeyLight device is on
+---
+--- Parameters:
+---  * name - The name of the device to check
+---
+--- Returns:
+---  * A boolean, `true` if the device is on, otherwise `false`
+function obj:isOn(name)
+    if (self.foundLights[name] == nil) then return false end
+    return self.foundLights[name]["on"] == 1
+end
+
+--- ElgatoKeyLight:toggle(name)
+--- Method
+--- Toggle the power state of a KeyLight device
+---
+--- Parameters:
+---  * name - The name of the device to toggle
+---
+--- Returns:
+---  * None
+function obj:toggle(name)
+    if (self:isOn(name)) then
+        self:turnOff(name)
+    else
+        self:turnOn(name)
+    end
 end
 
 --- ElgatoKeyLight:setBrightness(name, brightness)

@@ -106,6 +106,108 @@ Install:andUse("Caffeine", { hotkeys = { toggle = { hyper, "c" }}, start = true}
 -- Draw pretty rounded corners on all screens
 Install:andUse("RoundedCorners", { start = true })
 
+-- Install:andUse("ElgatoKeyLight", {
+--     config = {
+--         matchNames = {
+--             "Elgato Key Light Air"
+--         }
+--     },
+--     start = true
+-- })
+
+-- -- Configure our Stream Decks
+-- Install:andUse("StreamDeck",
+--   {
+--     config = {
+--         deckConfig = {
+--             ["BL44H1B01314"] = {
+--                 [2] = {
+--                     image = hs.image.imageFromAppBundle("com.apple.Safari"),
+--                     callback = function(deck, button, isDown)
+--                         print("HELLO I AM A BUTTON")
+--                     end
+--                 }
+--             },
+--             ["AL15G1A01664"] = {
+--                 [1] = {
+--                     image = hs.image.imageFromAppBundle("com.obsproject.obs-studio"),
+--                     callback = function(deck, button, isDown)
+--                         if isDown then
+--                             local obs = hs.application.applicationsForBundleID("com.obsproject.obs-studio")
+--                             if obs[1] == nil then
+--                                 spoon.OBS:start()
+--                                 hs.application.launchOrFocus("OBS")
+--                                 spoon.ElgatoKeyLight:turnOn("Elgato Key Light Air F220")
+--                             else
+--                                 obs[1]:kill()
+--                                 spoon.ElgatoKeyLight:turnOff("Elgato Key Light Air F220")
+--                                 spoon.OBS:stop()
+--                             end
+--                         end
+--                     end
+--                 },
+--                 [2] = {
+--                     image = hs.image.imageFromAppBundle("com.apple.Safari"),
+--                     callback = function(deck, button, isDown)
+--                         if isDown then
+--                             spoon.ElgatoKeyLight:toggle("Elgato Key Light Air F220")
+--                         end
+--                     end
+--                 },
+--                 [3] = {
+--                     image = hs.image.imageFromAppBundle("com.apple.Facetime"),
+--                     callback = function(deck, button, isDown)
+--                         if isDown then
+--                             spoon.OBS:request("ToggleVirtualCam")
+--                         end
+--                     end
+--                 },
+--                 [4] = {
+--                     image = hs.image.imageFromAppBundle("com.apple.Music"),
+--                     callback = function(deck, button, isDown)
+--                         if isDown then
+--                             spoon.OBS:request("GetSourceFilter", {
+--                                 ["sourceName"] = "SUBSCENE: Logi 4K",
+--                                 ["filterName"] = "Freeze"
+--                             }, "__id_DO_TOGGLE_FREEZE__")
+--                         end
+--                     end
+--                 }
+--             }
+--         }
+--     },
+--     start = true
+--   }
+-- )
+
+-- -- Configure OBS
+-- Install:andUse("OBS",
+--   {
+--     config = {
+--         eventCallback = function(eventType, eventIntent, eventData)
+--             if eventType == "SpoonOBSConnected" and spoon.OBS.eventSubscriptions == nil then
+--                 spoon.OBS:updateEventSubscriptions(spoon.OBS.eventSubscriptionValues.All)
+--                 return
+--             end
+--             print("OBS event: "..eventType)
+--             if eventType == "SpoonRequestResponse" then
+--                 if eventData["requestId"] == "__id_DO_TOGGLE_FREEZE__" then
+--                     spoon.OBS:request("SetSourceFilterEnabled", {
+--                         ["sourceName"] = "SUBSCENE: Logi 4K",
+--                         ["filterName"] = "Freeze",
+--                         ["filterEnabled"] = not eventData["responseData"]["filterEnabled"]
+--                     })
+--                 end
+--                 -- print("  Data: "..hs.inspect(eventData))
+--             end
+--         end,
+--         host = "localhost",
+--         port = 4455
+--     },
+--     start = false
+--   }
+-- )
+
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
 if (hostname == "fuyo") then
     -- I like to have some little traffic light coloured dots in the bottom right corner of my screen
@@ -598,15 +700,15 @@ end
 hs.audiodevice.watcher.setCallback(audiodeviceDeviceCallback)
 hs.audiodevice.watcher.start()
 
-hs.loadSpoon("StreamDeckMicMuter")
-hs.loadSpoon("StreamDeckAudioDeviceCycle")
-spoon.StreamDeckAudioDeviceCycle.devices = {
-    ["BRIDGE CAST"] = "headphone.png",
-    ["Audioengine 2+  "] = "speaker.png",
-    ["bosies"] = "bluetooth.png",
-    ["Chris' AirPods"] = "airpod.png"
-}
-hs.streamdeck.init(streamDeckDiscovery)
+--hs.loadSpoon("StreamDeckMicMuter")
+--hs.loadSpoon("StreamDeckAudioDeviceCycle")
+-- spoon.StreamDeckAudioDeviceCycle.devices = {
+--     ["BRIDGE CAST"] = "headphone.png",
+--     ["Audioengine 2+  "] = "speaker.png",
+--     ["bosies"] = "bluetooth.png",
+--     ["Chris' AirPods"] = "airpod.png"
+-- }
+-- hs.streamdeck.init(streamDeckDiscovery)
 
 -- krbRefresherTimer = hs.timer.doEvery(7200, function()
 --     if krbRefresherTask and krbRefresherTask:isRunning() then
@@ -636,46 +738,46 @@ hs.chooser.globalCallback = nil
 --collectgarbage("setstepmul", 1000)
 --collectgarbage("setpause", 1)
 
-function streamDeckTest()
-    local colors = {}
-    local colorn = 0
-    for k,v in pairs(hs.drawing.color.x11) do
-        colorn = colorn + 1
-        colors[colorn]=k
-    end
+-- function streamDeckTest()
+--     local colors = {}
+--     local colorn = 0
+--     for k,v in pairs(hs.drawing.color.x11) do
+--         colorn = colorn + 1
+--         colors[colorn]=k
+--     end
 
-    for num=1,hs.streamdeck.numDevices() do
-        local device = hs.streamdeck.getDevice(num)
-        local columns, rows = device:buttonLayout()
-        for button=1,rows*columns do
-            device:setButtonColor(button, hs.drawing.color.x11[colors[button]])
-        end
+--     for num=1,hs.streamdeck.numDevices() do
+--         local device = hs.streamdeck.getDevice(num)
+--         local columns, rows = device:buttonLayout()
+--         for button=1,rows*columns do
+--             device:setButtonColor(button, hs.drawing.color.x11[colors[button]])
+--         end
 
-        device:buttonCallback(function(deck, button, isDown)
-            print("Button: "..button.." on: "..tostring(deck))
-        end)
-    end
+--         device:buttonCallback(function(deck, button, isDown)
+--             print("Button: "..button.." on: "..tostring(deck))
+--         end)
+--     end
 
-    hs.timer.usleep(2000000)
+--     hs.timer.usleep(2000000)
 
-    local function ends_with(str, ending)
-        return ending == "" or str:sub(-#ending) == ending
-    end
+--     local function ends_with(str, ending)
+--         return ending == "" or str:sub(-#ending) == ending
+--     end
 
---    local icons = {}
---    local iconn = 0
---    for k,v in pairs(hs.image.additionalImageNames.platinum) do
---        if not ends_with(k, "Template") then
---            iconn = iconn + 1
---            icons[iconn]=k
---        end
---    end
+-- --    local icons = {}
+-- --    local iconn = 0
+-- --    for k,v in pairs(hs.image.additionalImageNames.platinum) do
+-- --        if not ends_with(k, "Template") then
+-- --            iconn = iconn + 1
+-- --            icons[iconn]=k
+-- --        end
+-- --    end
 
-    for num=1,hs.streamdeck.numDevices() do
-        local device = hs.streamdeck.getDevice(num)
-        local columns, rows = device:buttonLayout()
-        for button=1,rows*columns do
-            device:setButtonImage(button, hs.image.imageFromName(hs.image.additionalImageNames.platinum[1]))
-        end
-    end
-end
+--     for num=1,hs.streamdeck.numDevices() do
+--         local device = hs.streamdeck.getDevice(num)
+--         local columns, rows = device:buttonLayout()
+--         for button=1,rows*columns do
+--             device:setButtonImage(button, hs.image.imageFromName(hs.image.additionalImageNames.platinum[1]))
+--         end
+--     end
+-- end
