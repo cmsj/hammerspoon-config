@@ -4,7 +4,7 @@
 -- package.cpath = package.cpath .. ";" .. ZBS .. "/bin/?.dylib;" .. ZBS .. "/bin/clibs53/?.dylib"
 -- require("mobdebug").start()
 
-hs.console.consoleFont("Liga SFMono Nerd Font")
+--hs.console.consoleFont("Liga SFMono Nerd Font")
 
 -- Print out more logging for me to see
 require("hs.crash")
