@@ -65,6 +65,7 @@ Install:andUse("URLDispatcher",
   {
     config = {
       url_patterns = work_url_patterns,
+      app_patterns = work_app_patterns,
       default_handler = "com.apple.Safari"
     },
     start = true
@@ -725,6 +726,20 @@ function karabinerCallback(eventName, params)
 end
 
 hs.urlevent.bind("karabiner", karabinerCallback)
+
+function movieMode(value)
+    local xdr = 1.0
+    local lg = 0.0
+    if value == false then
+        xdr = 0.2
+        lg = 0.2
+    end
+
+    hs.screen.find("XDR"):setBrightness(xdr)
+    hs.screen.find("LG"):setBrightness(lg)
+end
+hs.urlevent.bind('movieModeOn', function() movieMode(true) end)
+hs.urlevent.bind('movieModeOff', function() movieMode(false) end)
 
 if hs.console.darkMode() then
     hs.console.outputBackgroundColor({ white = 0 })
