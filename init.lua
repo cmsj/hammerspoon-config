@@ -210,7 +210,7 @@ Install:andUse("RoundedCorners", { start = true })
 -- )
 
 -- Load various modules from ~/.hammerspoon/ depending on which machine this is
-if (hostname == "fuyo") then
+if (hostname == "fuyo" or hostname == "fuyoshi") then
     -- I like to have some little traffic light coloured dots in the bottom right corner of my screen
     -- to show various status items. Like Geeklet
     statuslets = require("statuslets"):start()
@@ -261,7 +261,7 @@ lastNumberOfScreens = #hs.screen.allScreens()
 shouldUnmuteOnScreenWake = nil
 
 -- Defines for window grid
-if (hostname == "fuyo") then
+if (hostname == "fuyo" or hostname == "fuyoshi") then
     hs.grid.GRIDWIDTH = 8
     hs.grid.GRIDHEIGHT = 8
 else
@@ -627,7 +627,7 @@ screenWatcher:start()
 usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
 usbWatcher:start()
 
-if (hostname == "fuyo") then
+if (hostname == "fuyo" or hostname == "fuyoshi") then
     caffeinateWatcher = hs.caffeinate.watcher.new(caffeinateCallback)
     caffeinateWatcher:start()
 end
