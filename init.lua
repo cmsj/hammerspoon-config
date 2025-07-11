@@ -10,6 +10,9 @@
 require("hs.crash")
 hs.crash.crashLogToNSLog = false
 
+-- Store for all of the hyper key bindings
+hyperfns = {}
+
 -- Pull in private.lua which isn't in this repo because it contains work related stuff
 require("private")
 
@@ -553,9 +556,6 @@ function reloadConfig(paths)
 
     hs.reload()
 end
-
--- And now for hotkeys relating to Hyper. First, let's capture all of the functions, then we can just quickly iterate and bind them
-hyperfns = {}
 
 -- Hotkeys to resize windows absolutely
 hyperfns["a"] = function() hs.window.focusedWindow():moveToUnit(hs.layout.left30) end
