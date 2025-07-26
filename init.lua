@@ -61,7 +61,9 @@ spoon.SpoonInstall.use_syncinstall = true
 Install=spoon.SpoonInstall
 
 -- Control brightness for all compatible displays, using the keyboard brightness keys
-Install:andUse("AllBrightness", {start=true})
+Install:andUse("AllBrightness", {start=false})
+spoon.AllBrightness.referenceScreen = hs.screen.find("LG UltraFine")
+spoon.AllBrightness:start()
 
 -- Direct URLs automatically based on patterns
 Install:andUse("URLDispatcher",
@@ -245,8 +247,8 @@ else
 end
 
 -- Define monitor names for layout purposes
-display_xdr = "Pro Display XDR"
-display_monitor = "LG Ultrafine"
+display_xdr = "Fake Display XDR"
+display_monitor = "LG UltraFine"
 
 -- Define audio device names for headphone/speaker switching
 headphoneDevice = "BRIDGE CAST"
@@ -281,15 +283,27 @@ frameCache = {}
 --   Format reminder:
 --     {"App name", "Window name", "Display Name", "unitrect", "framerect", "fullframerect"},
 dual_display = {
-    {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 0.375, 0.5), nil, nil},
-    {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.5),   nil, nil},
-    {"Safari",            nil,          display_xdr,     hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
-    {"Kiwi for Gmail",    nil,          display_xdr,     hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
-    {"Trello",            nil,          display_xdr,     hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
-    {"Mail",              nil,          display_xdr,     hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
-    {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 0.375, 0.25), nil, nil},
-    {"Fantastical",       nil,          display_monitor, hs.geometry.unitrect(0.375, 0, 5/8, 0.5), nil, nil},
-    {"Freeter",           nil,          display_monitor, hs.geometry.unitrect(0.375, 0.5, 5/8, 0.5), nil, nil},
+    -- {"IRC",               nil,          display_monitor, hs.geometry.unitrect(0, 0.5, 0.375, 0.5), nil, nil},
+    -- {"Reeder",            nil,          display_monitor, hs.geometry.unitrect(0.75, 0, 0.25, 0.5),   nil, nil},
+    -- {"Safari",            nil,          display_xdr,     hs.geometry.unitrect(0.5, 0, 0.5, 0.5),    nil, nil},
+    -- {"Kiwi for Gmail",    nil,          display_xdr,     hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
+    -- {"Trello",            nil,          display_xdr,     hs.geometry.unitrect(0.5, 0.5, 0.5, 0.5), nil, nil},
+    -- {"Mail",              nil,          display_xdr,     hs.geometry.unitrect(0, 0.5, 0.5, 0.5),   nil, nil},
+    -- {"Messages",          nil,          display_monitor, hs.geometry.unitrect(0, 0, 0.375, 0.25), nil, nil},
+    -- {"Fantastical",       nil,          display_monitor, hs.geometry.unitrect(0.375, 0, 5/8, 0.5), nil, nil},
+    -- {"Freeter",           nil,          display_monitor, hs.geometry.unitrect(0.375, 0.5, 5/8, 0.5), nil, nil},
+    {"Safari",              nil,        display_xdr,     hs.geometry.unitrect(0, 0, 0.46, 0.535), nil, nil},
+    {"Kiwi for Gmail",      "Inbox .*", display_xdr,     hs.geometry.unitrect(0, 0.535, 0.46, 0.465), nil, nil},
+
+    {"Textual IRC Client",  nil,        display_xdr,     hs.geometry.unitrect(0.46, 0, 0.305, 0.305), nil, nil},
+    {"Discord",             nil,        display_xdr,     hs.geometry.unitrect(0.46, 0.305, 0.305, 0.505), nil, nil},
+    {"Messages",            nil,        display_xdr,     hs.geometry.unitrect(0.46, 0.81, 0.305, 0.2), nil, nil},
+
+    {"iTerm2",              nil,        display_xdr,     hs.geometry.unitrect(0.765, 0.1, 0.235, 0.9), nil, nil},
+
+    {"Slack",               nil,        display_monitor, hs.geometry.unitrect(0, 0, 0.4, 0.6), nil, nil},
+    {"Fantastical",         nil,        display_monitor, hs.geometry.unitrect(0, 0.6, 0.4, 0.4), nil, nil},
+    {"Google Chrome",       nil,        display_monitor, hs.geometry.unitrect(0.4, 0, 0.6, 1.0), nil, nil},
 }
 
 -- Useful helper function for making hs.layout layouts
@@ -566,7 +580,7 @@ hyperfns['f'] = toggle_window_maximized
 hyperfns['r'] = function() hs.window.focusedWindow():toggleFullScreen() end
 
 -- Hotkeys to trigger defined layouts
-hyperfns['2'] = function() hs.layout.apply(dual_display) end
+hyperfns['2'] = function() hs.layout.apply(dual_display, string.match) end
 
 -- Hotkeys to interact with the window grid
 hyperfns['g'] = hs.grid.show
